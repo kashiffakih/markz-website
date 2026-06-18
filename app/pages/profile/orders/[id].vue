@@ -56,14 +56,14 @@
                       {{ item.product_name }}
                     </v-list-item-title>
                     <v-list-item-subtitle class="text-caption text-grey">
-                      <span v-if="item.pack?.value"
+                      <!-- <span v-if="item.pack?.value"
                         >Pack: {{ item.pack?.value }}</span
-                      >
+                      > -->
                       <span v-if="item.kind_of_flower">
-                        | Size: {{ item.kind_of_flower }}</span
+                        Size: {{ item.kind_of_flower }}</span
                       >
                       <span v-if="item.flavour">
-                        | Colour/Flavour: {{ item.flavour }}</span
+                        | Colour: {{ item.flavour }}</span
                       >
                       <span> | Qty: {{ item.quantity }}</span>
                     </v-list-item-subtitle>
@@ -665,7 +665,10 @@ const mapOrderDetailsToItems = (ordersList: any[]) => {
             detail.product?.product_images?.[0]?.image_path,
         ),
         quantity: detail.quantity,
-        price: detail.quantity > 0 ? (parseFloat(detail.order_detail_cost) / detail.quantity) : parseFloat(detail.order_detail_cost || 0),
+        price:
+          detail.quantity > 0
+            ? parseFloat(detail.order_detail_cost) / detail.quantity
+            : parseFloat(detail.order_detail_cost || 0),
         pack: matchingPack || { value: detail.product_pack },
         flavour: detail.flavour,
         kind_of_flower: detail.kind_of_flower,

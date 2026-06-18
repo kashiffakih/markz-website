@@ -127,6 +127,8 @@ export const useCartStore = defineStore('cart', {
             productImage: item.product?.imagepath1 || product?.imagepath1,
             pack: packName,
             packId: item.pack, // Retain original pack ID for operations
+            flavor: item.flavour || '',
+            kindOfFlower: item.kind_of_flower || '',
             price: resolvedPrice,
             quantity: item.qty || 1,
             // Store original object if needed
@@ -153,9 +155,9 @@ export const useCartStore = defineStore('cart', {
     },
     
     // Add item (Increment)
-    async addToCart(productId: number, pack: string, quantity: number = 1, price?: number) {
+    async addToCart(productId: number, pack: string, quantity: number = 1, price?: number, flavor?: string, kindOfFlower?: string) {
       // Mobile app logic: type=true adds item/increments
-      return this.modifyCart(productId, pack, true, price)
+      return this.modifyCart(productId, pack, true, price, flavor, kindOfFlower)
     },
 
     // Completely remove/delete item from cart using DELETE endpoint via Method Spoofing
@@ -221,7 +223,7 @@ export const useCartStore = defineStore('cart', {
     },
 
     // General method to modify cart
-    async modifyCart(productId: number, pack: string, isAdd: boolean, price?: number) {
+    async modifyCart(productId: number, pack: string, isAdd: boolean, price?: number, flavor?: string, kindOfFlower?: string) {
       const api = useApi()
       const authStore = useAuthStore()
       if (!authStore.user) return { success: false, message: 'Login required' }
@@ -236,8 +238,8 @@ export const useCartStore = defineStore('cart', {
           role: authStore.activeRole,
           is_add_to_cart: 'true',
           // Additional params matching mobile
-          kind_of_flower: '',
-          flavour: '',
+          kind_of_flower: kindOfFlower || '', // Mapped to Size in backend/mobile
+          flavour: flavor || '', // Mapped to Color in backend/mobile
           write_on_cake: '',
           points: 0,
           product_price: price !== undefined ? price.toString() : '',

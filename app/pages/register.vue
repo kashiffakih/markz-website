@@ -2,17 +2,18 @@
   <v-container class="py-8">
     <v-row justify="center">
       <v-col cols="12" sm="10" md="7" lg="6">
-        <v-card class="pa-8" rounded="xl">
+        <v-card class="pa-8" flat style="border: 1px solid var(--border-color) !important; background-color: #ffffff; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04) !important;">
           <!-- Header -->
           <div class="text-center mb-6">
-            <h1 class="text-h4 font-weight-bold text-secondary mb-2">
+            <h1 class="text-h3 font-weight-medium text-secondary font-serif mb-2" style="font-size: 2rem !important;">
               Create Account
             </h1>
-            <p class="text-grey">Join Aadab today</p>
+            <div style="width: 30px; height: 1.5px; background-color: var(--accent); margin: 8px auto 16px;"></div>
+            <p class="text-grey text-caption font-weight-bold" style="letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8;">Join Aadab today</p>
           </div>
 
           <!-- Role Tabs -->
-          <v-tabs v-model="selectedRole" class="mb-6" grow>
+          <v-tabs v-model="selectedRole" color="accent" class="mb-6" grow>
             <v-tab value="User">
               <v-icon start>mdi-account</v-icon>
               Customer
@@ -65,7 +66,7 @@
             <!-- Distributor-specific fields -->
             <template v-if="selectedRole === 'Distributor'">
               <v-divider class="my-4" />
-              <p class="text-subtitle-2 font-weight-bold text-secondary mb-4">
+              <p class="text-subtitle-2 font-weight-bold text-secondary mb-4" style="letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.75rem !important;">
                 Business Information
               </p>
 
@@ -129,10 +130,11 @@
             <!-- Terms -->
             <v-checkbox
               v-model="form.acceptTerms"
+              color="accent"
               :rules="[(v) => !!v || 'You must accept the terms']"
             >
               <template v-slot:label>
-                <span>
+                <span class="text-caption font-weight-bold">
                   I agree to the
                   <NuxtLink to="/terms" class="text-primary"
                     >Terms & Conditions</NuxtLink
@@ -144,9 +146,10 @@
             <!-- Submit -->
             <v-btn
               type="submit"
-              color="primary"
+              color="secondary"
               size="large"
               block
+              class="luxury-action-btn font-weight-bold"
               :loading="loading"
               :disabled="!formValid"
             >
@@ -155,7 +158,7 @@
           </v-form>
 
           <!-- Login Link -->
-          <p class="text-center mt-6 text-grey">
+          <p class="text-center mt-6 text-grey text-body-2">
             Already have an account?
             <NuxtLink
               to="/login"
@@ -273,3 +276,33 @@ const handleRegister = async () => {
   }
 };
 </script>
+
+<style scoped>
+.v-tabs :deep(.v-tab) {
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.luxury-action-btn {
+  background: var(--secondary) !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 600 !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.luxury-action-btn:hover:not(:disabled) {
+  background: var(--accent) !important;
+  box-shadow: 0 8px 24px rgba(197, 168, 80, 0.25) !important;
+}
+
+.text-primary {
+  color: var(--accent) !important;
+}
+</style>

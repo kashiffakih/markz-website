@@ -2,29 +2,63 @@
   <v-container class="py-8">
     <v-row justify="center">
       <v-col cols="12" sm="8" md="5" lg="4">
-        <v-card class="pa-8" rounded="xl">
+        <v-card
+          class="pa-8"
+          flat
+          style="
+            border: 1px solid var(--border-color) !important;
+            background-color: #ffffff;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04) !important;
+          "
+        >
           <!-- Header -->
           <div class="text-center mb-6">
-            <h1 class="text-h4 font-weight-bold text-secondary mb-2">
+            <h1
+              class="text-h3 font-weight-medium text-secondary font-serif mb-2"
+              style="font-size: 2rem !important"
+            >
               Welcome Back
             </h1>
-            <p class="text-grey">Sign in to your account</p>
+            <div
+              style="
+                width: 30px;
+                height: 1.5px;
+                background-color: var(--accent);
+                margin: 8px auto 16px;
+              "
+            ></div>
+            <p
+              class="text-grey text-caption font-weight-bold"
+              style="
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                opacity: 0.8;
+              "
+            >
+              Sign in to your account
+            </p>
           </div>
 
           <!-- Form -->
           <!-- Login Role Selector -->
           <v-btn-toggle
             v-model="loginRole"
-            color="primary"
-            rounded="xl"
-            group
+            color="accent"
             mandatory
-            class="d-flex w-100 mb-6 border"
+            class="d-flex w-100 mb-6 custom-toggle-group"
           >
-            <v-btn value="User" class="flex-grow-1" height="48">
+            <v-btn
+              value="User"
+              class="flex-grow-1 custom-toggle-btn"
+              height="42"
+            >
               Customer
             </v-btn>
-            <v-btn value="Distributor" class="flex-grow-1" height="48">
+            <v-btn
+              value="Distributor"
+              class="flex-grow-1 custom-toggle-btn"
+              height="42"
+            >
               Distributor
             </v-btn>
           </v-btn-toggle>
@@ -58,7 +92,8 @@
             <div class="text-right mb-6">
               <NuxtLink
                 to="/forgot-password"
-                class="text-primary text-decoration-none"
+                class="text-primary text-decoration-none font-weight-bold text-caption"
+                style="letter-spacing: 0.02em"
               >
                 Forgot Password?
               </NuxtLink>
@@ -67,9 +102,10 @@
             <!-- Submit Button -->
             <v-btn
               type="submit"
-              color="primary"
+              color="secondary"
               size="large"
               block
+              class="luxury-action-btn font-weight-bold"
               :loading="loading"
               :disabled="!formValid"
             >
@@ -80,7 +116,11 @@
           <!-- Divider -->
           <div class="d-flex align-center my-6">
             <v-divider />
-            <span class="mx-4 text-grey">or</span>
+            <span
+              class="mx-4 text-grey text-caption"
+              style="text-transform: uppercase; letter-spacing: 0.05em"
+              >or</span
+            >
             <v-divider />
           </div>
 
@@ -88,26 +128,26 @@
           <div class="d-flex ga-3">
             <v-btn
               variant="outlined"
-              color="grey"
+              color="secondary"
               class="flex-grow-1"
+              style="
+                border-radius: 6px !important;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-size: 0.75rem;
+              "
               @click="handleGoogleLogin"
             >
               <v-icon start>mdi-google</v-icon>
               Google
             </v-btn>
-            <v-btn
-              variant="outlined"
-              color="grey"
-              class="flex-grow-1"
-              @click="handlePhoneLogin"
-            >
-              <v-icon start>mdi-phone</v-icon>
-              Phone
-            </v-btn>
           </div>
 
           <!-- Register Link -->
-          <p v-if="!authStore.isLoggedIn" class="text-center mt-6 text-grey">
+          <p
+            v-if="!authStore.isLoggedIn"
+            class="text-center mt-6 text-grey text-body-2"
+          >
             Don't have an account?
             <NuxtLink
               to="/register"
@@ -185,11 +225,6 @@ const handleGoogleLogin = () => {
   showSnackbar("Google login coming soon", "info");
 };
 
-const handlePhoneLogin = () => {
-  // TODO: Implement Phone OTP login
-  showSnackbar("Phone login coming soon", "info");
-};
-
 // Redirect if already logged in
 onMounted(() => {
   if (authStore.isLoggedIn) {
@@ -197,3 +232,47 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.custom-toggle-group {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  background-color: #fcfcf9;
+  overflow: hidden;
+}
+
+.custom-toggle-btn {
+  border-radius: 0 !important;
+  font-family: "Urbanist", sans-serif;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.v-btn--selected {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+}
+
+.luxury-action-btn {
+  background: var(--secondary) !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 600 !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.luxury-action-btn:hover:not(:disabled) {
+  background: var(--accent) !important;
+  box-shadow: 0 8px 24px rgba(197, 168, 80, 0.25) !important;
+}
+
+.text-primary {
+  color: var(--accent) !important;
+}
+</style>

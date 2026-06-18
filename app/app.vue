@@ -167,6 +167,6 @@ const toggleRole = async () => {
 
 <style>
 .bg-background {
-  background-color: #fffdf5 !important;
+  background-color: var(--background) !important;
 }
 </style>

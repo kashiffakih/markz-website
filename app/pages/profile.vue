@@ -8,7 +8,7 @@
             <v-card rounded="lg" class="mb-4">
               <v-list>
                 <v-list-item
-                  :prepend-avatar="userAvatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.displayName) + '&background=EED056&color=fff'"
+                  :prepend-avatar="userAvatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.displayName) + '&background=C5A850&color=fff'"
                   :title="authStore.displayName"
                   :subtitle="authStore.user?.email"
                   class="pb-4"

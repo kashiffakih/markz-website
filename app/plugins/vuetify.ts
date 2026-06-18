@@ -14,31 +14,49 @@ export default defineNuxtPlugin((app) => {
         aadabTheme: {
           dark: false,
           colors: {
-            primary: '#EED056',      // Golden Yellow
-            secondary: '#232323',    // Dark
-            accent: '#F6E27F',       // Light Gold
-            background: '#FFFDF5',   // Cream
-            surface: '#FFFFFF',
-            error: '#FF5252',
-            info: '#2196F3',
-            success: '#4CAF50',
-            warning: '#FB8C00',
+            primary: '#E55E5E',      // Coral Red / Salmon Accent
+            secondary: '#000000',    // Pure Black
+            accent: '#E55E5E',       // Coral Red / Salmon Accent
+            background: '#ffffff',   // Pure White
+            surface: '#ffffff',
+            error: '#d32f2f',
+            info: '#0288d1',
+            success: '#2e7d32',
+            warning: '#ed6c02',
           },
         },
       },
     },
     defaults: {
       VBtn: {
-        rounded: 'lg',
-        fontWeight: 600,
+        rounded: 'pill',
+        fontWeight: 750,
+        elevation: 0,
+        variant: 'flat',
       },
       VCard: {
-        rounded: 'lg',
-        elevation: 2,
+        rounded: 'xl',
+        elevation: 0,
       },
       VTextField: {
         variant: 'outlined',
         density: 'comfortable',
+        rounded: 'lg',
+      },
+      VSelect: {
+        variant: 'outlined',
+        density: 'comfortable',
+        rounded: 'lg',
+      },
+      VAutocomplete: {
+        variant: 'outlined',
+        density: 'comfortable',
+        rounded: 'lg',
+      },
+      VTextarea: {
+        variant: 'outlined',
+        density: 'comfortable',
+        rounded: 'lg',
       },
     },
   })

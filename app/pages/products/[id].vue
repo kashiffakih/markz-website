@@ -97,22 +97,23 @@
             </div>
 
             <!-- Price -->
-            <div class="d-flex align-items-baseline mb-4" v-if="selectedPack">
-              <div class="d-flex align-items-baseline">
-                <span class="text-h4 font-weight-bold text-primary"
+            <div class="d-flex align-center mb-4" v-if="selectedPack">
+              <div class="d-flex align-center">
+                <span class="text-h4 font-weight-bold text-secondary"
                   >₹{{ displayPrice }}</span
                 >
                 <span
                   v-if="originalPrice > displayPrice"
                   class="text-h6 text-grey text-decoration-line-through ms-3"
+                  style="font-size: 1.15rem !important;"
                 >
                   ₹{{ originalPrice }}
                 </span>
                 <v-chip
                   v-if="discountPercent > 0"
-                  color="error"
+                  color="primary"
                   size="small"
-                  class="ms-3"
+                  class="ms-3 font-weight-bold"
                 >
                   {{ discountPercent }}% OFF
                 </v-chip>
@@ -133,13 +134,14 @@
             <!-- Variants (Packs) -->
             <div v-if="filteredPacks.length > 0" class="mb-6">
               <div class="d-flex justify-space-between align-center mb-2">
-                <div class="text-subtitle-1 font-weight-bold">Select Pack</div>
+                <div class="text-subtitle-1 font-weight-bold" style="letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.8rem !important; color: var(--secondary);">Select Pack</div>
                 <v-btn
                   v-if="product.size_chart_path"
                   variant="text"
                   density="compact"
-                  color="primary"
+                  color="accent"
                   prepend-icon="mdi-ruler"
+                  style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;"
                   @click="showSizeChart = true"
                 >
                   Size Chart
@@ -147,7 +149,7 @@
               </div>
               <v-chip-group
                 :model-value="selectedPack?.id"
-                selected-class="text-primary font-weight-bold"
+                selected-class="text-accent font-weight-bold"
                 column
               >
                 <v-chip
@@ -158,9 +160,9 @@
                   size="large"
                   :value="pack.id"
                   @click="selectPack(pack)"
+                  class="pack-chip"
                   :class="{
-                    'border-primary bg-primary-lighten-5':
-                      selectedPack?.id === pack.id,
+                    'active-pack-chip': selectedPack?.id === pack.id,
                   }"
                 >
                   {{ pack.value }}
@@ -228,76 +230,42 @@
                   Available in stock ({{ selectedPack?.qty || 0 }})
                 </div>
 
-                <div v-if="currentCartItem">
-                  <div class="text-subtitle-1 font-weight-bold mb-2">
-                    Quantity in Cart
-                  </div>
-                  <div class="d-flex align-center ga-4">
-                    <v-item-group
-                      class="d-flex align-center border rounded-pill overflow-hidden"
-                    >
-                      <v-btn
-                        variant="text"
-                        height="48"
-                        width="48"
-                        icon="mdi-minus"
-                        @click="decrementQty"
-                        :loading="loadingCartAction"
-                      />
-                      <div
-                        class="text-h6 font-weight-bold px-4 text-center"
-                        style="min-width: 48px"
-                      >
-                        {{ currentCartItem.quantity }}
-                      </div>
-                      <v-btn
-                        variant="text"
-                        height="48"
-                        width="48"
-                        icon="mdi-plus"
-                        @click="incrementQty"
-                        :disabled="
-                          currentCartItem.quantity >= (selectedPack?.qty || 0)
-                        "
-                        :loading="loadingCartAction"
-                      />
-                    </v-item-group>
-
-                    <v-btn
-                      variant="text"
-                      color="primary"
-                      append-icon="mdi-arrow-right"
-                      to="/cart"
-                    >
-                      Go to Cart
+                <div class="d-flex ga-4 align-center mt-2">
+                  <!-- Action (Either Quantity or Add) -->
+                  <div v-if="currentCartItem" class="d-flex align-center justify-space-between product-quantity-controls px-2 flex-grow-1">
+                    <v-btn icon variant="text" :loading="loadingCartAction" @click="decrementQty" class="product-qty-btn" height="42" width="42">
+                       <v-icon size="24">mdi-minus</v-icon>
+                    </v-btn>
+                    <span class="font-weight-bold text-h6 text-secondary" style="min-width: 48px; text-align: center;">{{ currentCartItem.quantity }}</span>
+                    <v-btn icon variant="text" :loading="loadingCartAction" @click="incrementQty" :disabled="currentCartItem.quantity >= (selectedPack?.qty || 0)" class="product-qty-btn" height="42" width="42">
+                       <v-icon size="24">mdi-plus</v-icon>
                     </v-btn>
                   </div>
-                </div>
 
-                <!-- Initial Add to Cart State -->
-                <div v-else class="d-flex ga-4 align-center">
                   <v-btn
-                    color="primary"
+                    v-else
+                    color="secondary"
                     size="large"
-                    class="flex-grow-1 font-weight-bold rounded-lg"
+                    class="flex-grow-1 font-weight-bold luxury-action-btn"
                     prepend-icon="mdi-cart-plus"
                     @click="initialAddToCart"
                     :loading="loadingCartAction"
                     height="54"
-                    elevation="2"
+                    flat
                   >
                     Add to Cart
                   </v-btn>
 
+                  <!-- Secondary Actions -->
                   <v-btn
                     variant="outlined"
-                    color="primary"
+                    color="secondary"
                     size="large"
                     icon
                     @click="toggleWishlist"
                     height="54"
                     width="54"
-                    class="rounded-lg border-2"
+                    class="wishlist-btn-round"
                   >
                     <v-icon :color="isWishlisted ? 'error' : 'inherit'">
                       {{ isWishlisted ? "mdi-heart" : "mdi-heart-outline" }}
@@ -306,13 +274,13 @@
 
                   <v-btn
                     variant="outlined"
-                    color="primary"
+                    color="secondary"
                     size="large"
                     icon
                     @click="shareProduct"
                     height="54"
                     width="54"
-                    class="rounded-lg border-2"
+                    class="share-btn-round"
                   >
                     <v-icon>mdi-share-variant-outline</v-icon>
                   </v-btn>
@@ -612,6 +580,11 @@ const relatedProducts = computed(() => productStore.categoryWiseProducts || []);
 
 // Initialization
 onMounted(async () => {
+  if (!authStore.isLoggedIn) {
+    router.push("/login");
+    return;
+  }
+  
   const id = route.params.id;
   if (id) {
     product.value = await productStore.fetchProduct(id as string);
@@ -635,7 +608,7 @@ const currentCartItem = computed(() => {
   if (!product.value) return null;
   return cartStore.items.find(
     (item: any) =>
-      item.productId === product.value.id && item.pack == currentPackId.value,
+      item.productId === product.value.id && item.packId == currentPackId.value,
   );
 });
 
@@ -651,10 +624,7 @@ const incrementQty = async () => {
 
 const decrementQty = async () => {
   if (!currentCartItem.value) return;
-
-  loadingCartAction.value = true;
-  await cartStore.removeItem(currentCartItem.value.id);
-  loadingCartAction.value = false;
+  await modifyCart(false);
 };
 
 const modifyCart = async (isAdd: boolean) => {
@@ -670,13 +640,15 @@ const modifyCart = async (isAdd: boolean) => {
     return;
   }
 
-  if (currentCartItem.value && currentCartItem.value.quantity >= stock) {
+  if (isAdd && currentCartItem.value && currentCartItem.value.quantity >= stock) {
     showSnackbar(`Only ${stock} items available in stock!`);
     return;
   }
 
   loadingCartAction.value = true;
-  await cartStore.addToCart(product.value.id, currentPackId.value, 1, displayPrice.value);
+  const color = selectedUnit.value || '';
+  const size = selectedPack.value?.value || '';
+  await cartStore.modifyCart(product.value.id, currentPackId.value, isAdd, displayPrice.value, color, size);
   loadingCartAction.value = false;
 };
 
@@ -765,12 +737,76 @@ const shareProduct = async () => {
   cursor: pointer;
 }
 .transition-all {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .transition-all:hover {
-  transform: scale(1.06);
+  transform: scale(1.04);
 }
 .border-2 {
-  border-width: 2px !important;
+  border-width: 1.5px !important;
+}
+
+/* Luxury Variants Styles */
+.pack-chip {
+  border-radius: 6px !important;
+  border: 1px solid var(--border-color) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  font-family: 'Urbanist', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.02em;
+  background-color: #ffffff;
+}
+
+.active-pack-chip {
+  border-color: var(--accent) !important;
+  background-color: rgba(229, 94, 94, 0.06) !important;
+  color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(229, 94, 94, 0.1) !important;
+}
+
+/* Action Button Styles */
+.luxury-action-btn {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  font-size: 0.825rem !important;
+  font-weight: 750 !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.luxury-action-btn:hover {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: var(--coral-glow) !important;
+}
+
+.wishlist-btn-round,
+.share-btn-round {
+  border-radius: 50% !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.wishlist-btn-round:hover,
+.share-btn-round:hover {
+  border-color: var(--accent) !important;
+  background: #ffffff !important;
+  color: var(--accent) !important;
+  transform: scale(1.06);
+}
+
+.product-quantity-controls {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  height: 54px;
+}
+
+.product-qty-btn {
+  color: var(--secondary) !important;
 }
 </style>

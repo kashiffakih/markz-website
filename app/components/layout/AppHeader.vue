@@ -27,172 +27,156 @@
       </v-card>
     </v-dialog>
 
-    <v-app-bar flat color="white" elevation="1">
-      <v-container class="d-flex align-center">
-        <!-- Logo -->
-        <NuxtLink to="/" class="text-decoration-none">
-          <div class="d-flex align-center">
-            <span class="text-h5 font-weight-bold text-secondary">Aadab</span>
-          </div>
-        </NuxtLink>
-
-        <v-spacer />
-
-        <!-- Desktop Navigation -->
-        <nav class="d-none d-md-flex align-center ga-4">
-          <NuxtLink to="/" class="nav-link">Home</NuxtLink>
-          <NuxtLink to="/products" class="nav-link">Products</NuxtLink>
-          <NuxtLink to="/contact" class="nav-link">Contact</NuxtLink>
-        </nav>
-
-        <v-spacer />
-
-        <!-- Search -->
-        <v-card
-          elevation="0"
-          rounded="lg"
-          class="search-card d-none d-md-flex mr-4"
-          style="max-width: 300px; width: 100%"
-        >
-          <v-text-field
-            v-model="searchQuery"
-            density="compact"
-            placeholder="Search products..."
-            prepend-inner-icon="mdi-magnify"
-            variant="plain"
-            hide-details
-            class="search-input"
-            @keyup.enter="handleSearch"
-          />
-        </v-card>
-
-        <!-- Mobile Search Button -->
-        <v-btn
-          icon
-          variant="text"
-          class="d-md-none"
-          @click="showMobileSearch = !showMobileSearch"
-        >
-          <v-icon>mdi-magnify</v-icon>
-        </v-btn>
-
-        <!-- Cart Icon -->
-        <v-btn icon variant="text" @click="goToCart" class="mr-2">
-          <v-badge
-            :content="cartCount"
-            :model-value="cartCount > 0"
-            color="primary"
+    <v-app-bar flat class="glass-header" style="border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important; box-shadow: 0 4px 30px -10px rgba(0,0,0,0.02) !important;" height="75">
+      <v-container class="d-flex align-center justify-space-between position-relative py-0 px-4" fluid style="height: 100%; max-width: 1400px; margin: 0 auto;">
+        <!-- Left Side: Desktop Nav / Mobile Menu Toggle -->
+        <div class="d-flex align-center" style="min-width: 250px;">
+          <!-- Mobile Menu Toggle -->
+          <v-btn
+            icon
+            variant="text"
+            class="d-md-none mr-2"
+            @click="$emit('toggle-drawer')"
           >
-            <v-icon>mdi-cart-outline</v-icon>
-          </v-badge>
-        </v-btn>
-
-        <!-- User Menu / Login / Register (Client Only to avoid SSR/Hydration mismatches) -->
-        <ClientOnly>
-          <div class="d-none d-md-flex align-center">
-            <template v-if="isLoggedIn">
-              <v-menu>
-                <template v-slot:activator="{ props }">
-                  <v-btn v-bind="props" variant="text" class="d-flex align-center">
-                    <v-avatar size="28" class="mr-2 elevation-1" color="grey-lighten-2">
-                      <v-img
-                        v-if="userAvatarUrl"
-                        :src="userAvatarUrl"
-                        cover
-                      />
-                      <span v-else class="text-caption font-weight-bold">
-                        {{ displayName.charAt(0).toUpperCase() }}
-                      </span>
-                    </v-avatar>
-                    <span>{{ displayName }}</span>
-                    <v-icon right>mdi-chevron-down</v-icon>
-                  </v-btn>
-                </template>
-                <v-list>
-                  <v-list-item to="/profile">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-account</v-icon>
-                    </template>
-                    <v-list-item-title>Profile</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item to="/profile/orders">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-package-variant</v-icon>
-                    </template>
-                    <v-list-item-title>My Orders</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item v-if="!isDistributor" to="/profile/wallet">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-star-circle</v-icon>
-                    </template>
-                    <v-list-item-title>My Rewards</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item to="/profile/wishlist">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-heart</v-icon>
-                    </template>
-                    <v-list-item-title>Wishlist</v-list-item-title>
-                  </v-list-item>
-                  <v-divider />
-                  <!-- Role Switcher -->
-                  <v-list-item
-                    v-if="hasDistributorRole"
-                    @click="toggleRole"
-                    class="text-primary"
-                  >
-                    <template v-slot:prepend>
-                      <v-icon>mdi-account-switch</v-icon>
-                    </template>
-                    <v-list-item-title>
-                      Switch to {{ isDistributor ? "User" : "Distributor" }}
-                    </v-list-item-title>
-                    <template v-slot:append>
-                      <v-progress-circular
-                        v-if="switchingRole"
-                        indeterminate
-                        size="20"
-                        width="2"
-                        color="primary"
-                      />
-                    </template>
-                  </v-list-item>
-                  <v-divider />
-                  <v-list-item @click="handleLogout" class="text-error">
-                    <template v-slot:prepend>
-                      <v-icon color="error">mdi-logout</v-icon>
-                    </template>
-                    <v-list-item-title>Logout</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-            </template>
-
-            <!-- Login/Register (Not Logged In) -->
-            <template v-else>
-              <v-btn to="/login" variant="text" class="mr-2">
-                Login
-              </v-btn>
-              <v-btn to="/register" color="primary">
-                Register
-              </v-btn>
-            </template>
-          </div>
+            <v-icon>mdi-menu</v-icon>
+          </v-btn>
           
-          <template #fallback>
-            <!-- Server placeholder to avoid layout shift -->
-            <div class="d-none d-md-flex" style="width: 150px; height: 36px;"></div>
-          </template>
-        </ClientOnly>
+          <!-- Desktop Navigation -->
+          <nav class="d-none d-md-flex align-center ga-6">
+            <NuxtLink to="/" class="nav-link">Home</NuxtLink>
+            <NuxtLink to="/products" class="nav-link">Products</NuxtLink>
+            <NuxtLink to="/contact" class="nav-link">Contact</NuxtLink>
+          </nav>
+        </div>
 
-        <!-- Mobile Menu Toggle -->
-        <v-btn
-          icon
-          variant="text"
-          class="d-md-none"
-          @click="$emit('toggle-drawer')"
-        >
-          <v-icon>mdi-menu</v-icon>
-        </v-btn>
+        <!-- Center: Logo -->
+        <div class="logo-container">
+          <NuxtLink to="/" class="text-decoration-none">
+            <span class="logo-text">Aadab<span class="text-primary">.</span></span>
+          </NuxtLink>
+        </div>
+
+        <!-- Right Side: Search, Cart, User Menu -->
+        <div class="d-flex align-center justify-end ga-2" style="min-width: 250px;">
+          <!-- Desktop Search -->
+          <v-card
+            elevation="0"
+            class="search-card d-none d-md-flex mr-2"
+            style="width: 200px;"
+          >
+            <v-text-field
+              v-model="searchQuery"
+              density="compact"
+              placeholder="Search..."
+              prepend-inner-icon="mdi-magnify"
+              variant="plain"
+              hide-details
+              class="search-input"
+              @keyup.enter="handleSearch"
+            />
+          </v-card>
+
+          <!-- Mobile Search Button -->
+          <v-btn
+            icon
+            variant="text"
+            class="d-md-none"
+            @click="showMobileSearch = !showMobileSearch"
+          >
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+
+          <!-- Cart Button -->
+          <v-btn variant="text" @click="goToCart" class="text-caption font-weight-bold tracking-wider px-3 mr-1">
+            <v-icon start size="18" class="mr-1">mdi-cart-outline</v-icon>
+            CART ({{ cartCount }})
+          </v-btn>
+
+          <!-- User Menu / Login / Register (Client Only to avoid SSR/Hydration mismatches) -->
+          <ClientOnly>
+            <div class="d-none d-md-flex align-center">
+              <template v-if="isLoggedIn">
+                <v-menu>
+                  <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" variant="text" class="d-flex align-center px-3 font-weight-bold text-caption tracking-wider">
+                      ACCOUNT
+                      <v-icon size="small" class="ml-1">mdi-chevron-down</v-icon>
+                    </v-btn>
+                  </template>
+                  <v-list class="py-2" style="border-radius: 12px !important; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1) !important;">
+                    <v-list-item to="/profile" density="comfortable">
+                      <template v-slot:prepend>
+                        <v-icon size="20" class="mr-2">mdi-account-outline</v-icon>
+                      </template>
+                      <v-list-item-title class="font-weight-medium">Profile</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/profile/orders" density="comfortable">
+                      <template v-slot:prepend>
+                        <v-icon size="20" class="mr-2">mdi-package-variant-closed</v-icon>
+                      </template>
+                      <v-list-item-title class="font-weight-medium">My Orders</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item v-if="!isDistributor" to="/profile/wallet" density="comfortable">
+                      <template v-slot:prepend>
+                        <v-icon size="20" class="mr-2">mdi-wallet-outline</v-icon>
+                      </template>
+                      <v-list-item-title class="font-weight-medium">My Rewards</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/profile/wishlist" density="comfortable">
+                      <template v-slot:prepend>
+                        <v-icon size="20" class="mr-2">mdi-heart-outline</v-icon>
+                      </template>
+                      <v-list-item-title class="font-weight-medium">Wishlist</v-list-item-title>
+                    </v-list-item>
+                    <v-divider class="my-1" />
+                    <!-- Role Switcher -->
+                    <v-list-item
+                      v-if="hasDistributorRole"
+                      @click="toggleRole"
+                      class="text-primary"
+                      density="comfortable"
+                    >
+                      <template v-slot:prepend>
+                        <v-icon size="20" class="mr-2">mdi-account-switch-outline</v-icon>
+                      </template>
+                      <v-list-item-title class="font-weight-semibold">
+                        Switch to {{ isDistributor ? "User" : "Distributor" }}
+                      </v-list-item-title>
+                      <template v-slot:append>
+                        <v-progress-circular
+                          v-if="switchingRole"
+                          indeterminate
+                          size="20"
+                          width="2"
+                          color="primary"
+                        />
+                      </template>
+                    </v-list-item>
+                    <v-divider v-if="hasDistributorRole" class="my-1" />
+                    <v-list-item @click="handleLogout" class="text-error" density="comfortable">
+                      <template v-slot:prepend>
+                        <v-icon color="error" size="20" class="mr-2">mdi-logout</v-icon>
+                      </template>
+                      <v-list-item-title class="font-weight-semibold">Logout</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </template>
+
+              <!-- Login/Register (Not Logged In) -->
+              <template v-else>
+                <v-btn to="/login" variant="text" size="small" class="font-weight-bold text-caption tracking-wider px-3">
+                  ACCOUNT
+                </v-btn>
+              </template>
+            </div>
+            
+            <template #fallback>
+              <!-- Server placeholder to avoid layout shift -->
+              <div class="d-none d-md-flex" style="width: 150px; height: 36px;"></div>
+            </template>
+          </ClientOnly>
+        </div>
       </v-container>
 
       <!-- Mobile Search Bar Expanded -->
@@ -316,36 +300,83 @@ defineEmits(["toggle-drawer"]);
 
 <style scoped>
 .nav-link {
-  color: #232323;
+  color: var(--secondary);
   text-decoration: none;
-  font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: all 0.2s;
+  font-family: "Urbanist", sans-serif;
+  font-weight: 700;
+  font-size: 0.825rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 6px 2px;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-link:hover {
-  background-color: rgba(238, 208, 86, 0.15);
-  color: #eed056;
+  color: var(--accent);
+  background-color: transparent !important;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.logo-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.logo-text {
+  font-family: "Urbanist", sans-serif !important;
+  color: var(--secondary) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 1.6rem;
 }
 
 .search-card {
-  border: 1px solid #e0e0e0;
-  transition: all 0.2s;
+  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  border-radius: 9999px !important;
+  padding: 0 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .search-card:hover,
 .search-card:focus-within {
-  border-color: #eed056; /* Primary color */
-  box-shadow: 0 0 0 2px rgba(238, 208, 86, 0.2) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(229, 94, 94, 0.08) !important;
 }
 
 .search-input :deep(.v-field__input) {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 0.85rem;
 }
 
 .mobile-search-field :deep(.v-field) {
-  border-radius: 8px;
+  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  border-radius: 9999px !important;
 }
 </style>
