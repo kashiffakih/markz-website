@@ -75,9 +75,10 @@
 
                 <!-- Edit Button with dynamic 30 days check -->
                 <v-btn
+                  v-if="isEditable(review.created_at)"
                   size="small"
-                  :color="isEditable(review.created_at) ? 'primary' : 'grey-darken-1'"
-                  :variant="isEditable(review.created_at) ? 'outlined' : 'text'"
+                  color="primary"
+                  variant="outlined"
                   prepend-icon="mdi-pencil-outline"
                   class="rounded-lg font-weight-bold text-none"
                   @click="handleEditClick(review)"
@@ -328,9 +329,9 @@ const fetchReviews = async () => {
       userId: authStore.user?.id,
       isOnlyFetch: 1,
     });
-    const payload = response.data || response;
-    if (payload.success) {
-      reviews.value = payload.data || [];
+
+    if (response && response.success) {
+      reviews.value = response.data || [];
     }
   } catch (e) {
     console.error("Error fetching user reviews:", e);
@@ -347,9 +348,10 @@ const submitUpdate = async () => {
     const formData = new FormData();
     formData.append("userId", authStore.user!.id.toString());
     formData.append("productId", selectedReview.value.product_id.toString());
-    if (selectedReview.value.product_pack_id) {
-      formData.append("product_pack_id", selectedReview.value.product_pack_id.toString());
-    }
+    formData.append(
+      "product_pack_id",
+      selectedReview.value.product_pack_id ? selectedReview.value.product_pack_id.toString() : "null"
+    );
     formData.append("rating", editForm.rating.toString());
     formData.append("description", editForm.description);
 
@@ -363,13 +365,12 @@ const submitUpdate = async () => {
     const api = useApi();
     const response: any = await api.post("/review", formData);
 
-    const payload = response.data || response;
-    if (payload.success) {
+    if (response && response.success) {
       showSnackbar("Review updated successfully!", "success");
       editDialog.value = false;
       await fetchReviews();
     } else {
-      showSnackbar(payload.message || "Failed to update review.", "error");
+      showSnackbar(response?.message || "Failed to update review.", "error");
     }
   } catch (e: any) {
     console.error("Error updating review:", e);

@@ -96,14 +96,23 @@ export const useAuthStore = defineStore('auth', {
     },
     
     // Login
-    async login(email: string, password: string, targetRole: 'User' | 'Distributor' = 'User') {
+    async login(email: string, password?: string, targetRole: 'User' | 'Distributor' = 'User', isSocialLogin: boolean = false, socialLoginName?: string) {
       const api = useApi()
-      // Send active_role in login payload as requested
-      const response: any = await api.post<any>('/login', {
+      
+      const payload: any = {
         email,
-        password,
         active_role: targetRole,
-      })
+        role: targetRole, // Backend LoginController expects 'role' for social login registration
+      }
+      
+      if (password) payload.password = password
+      if (isSocialLogin) {
+        payload.is_social_login = true
+        payload.social_login_name = socialLoginName || 'GOOGLE'
+      }
+
+      // Send active_role in login payload as requested
+      const response: any = await api.post<any>('/login', payload)
       
       console.log('Login Response:', response)
       
@@ -133,7 +142,7 @@ export const useAuthStore = defineStore('auth', {
            }
         }
         
-        return { success: true }
+        return { success: true, is_new_user: response.is_new_user }
       }
       
       return { success: false, message: response.message || 'Login failed' }

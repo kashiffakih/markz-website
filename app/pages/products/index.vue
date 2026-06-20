@@ -582,13 +582,11 @@ onMounted(() => {
   border-top: 1px solid #E5E5E5;
 }
 
-:deep(.v-pagination .v-pagination__item--is-active),
-:deep(.v-pagination .v-btn--active),
-:deep(.v-pagination .v-btn[aria-current="true"]) {
+:deep(.v-pagination__item--is-active .v-btn) {
   background-color: #111111 !important;
   color: #ffffff !important;
 }
-:deep(.v-pagination .v-btn[aria-current="true"] .v-btn__content) {
+:deep(.v-pagination__item--is-active .v-btn__content) {
   color: #ffffff !important;
 }
 </style>

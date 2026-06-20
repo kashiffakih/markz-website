@@ -5,7 +5,6 @@
       <v-img
         :src="productImage"
         aspect-ratio="1"
-        cover
         class="product-image cursor-pointer"
         style="border-radius: 24px !important;"
         @click="navigateToDetail"
@@ -60,6 +59,19 @@
         >
           {{ product?.name }}
         </h3>
+        
+        <!-- Rating -->
+        <div class="d-flex align-center mb-2" v-if="(product?.total_reviews || 0) > 0">
+          <v-rating
+            :model-value="Number(product?.rating) || 0"
+            readonly
+            half-increments
+            density="compact"
+            size="x-small"
+            color="warning"
+          />
+          <span class="text-caption text-grey ms-1">({{ product?.total_reviews || 0 }})</span>
+        </div>
       </div>
 
       <div>

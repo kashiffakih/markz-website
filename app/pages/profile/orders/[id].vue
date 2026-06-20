@@ -76,7 +76,7 @@
                       }}"
                     </v-list-item-subtitle>
                     <v-list-item-subtitle
-                      v-if="order.status?.toLowerCase() === 'delivered'"
+                      v-if="order.status?.toLowerCase() === 'delivered' && !item.is_reviewed"
                       class="mt-2"
                     >
                       <v-btn
@@ -317,6 +317,7 @@
               color="primary"
               prepend-icon="mdi-file-document-outline"
               @click="downloadInvoice"
+              :loading="downloadingInvoice"
               class="font-weight-bold rounded-lg"
             >
               Download Invoice
@@ -384,6 +385,22 @@
             rows="4"
             auto-grow
           ></v-textarea>
+
+          <!-- Multiple Attachment Input -->
+          <div class="mt-2">
+            <div class="text-caption font-weight-bold text-grey-darken-1 mb-2">Upload Product Images (Optional)</div>
+            <v-file-input
+              v-model="newReview.images"
+              label="Select Images"
+              variant="outlined"
+              density="compact"
+              accept="image/*"
+              multiple
+              prepend-icon="mdi-camera-outline"
+              chips
+              show-size
+            ></v-file-input>
+          </div>
         </v-card-text>
 
         <v-divider></v-divider>
@@ -511,6 +528,7 @@ const selectedReviewItem = ref<any>(null);
 const newReview = ref({
   rating: 0,
   description: "",
+  images: [] as File[],
 });
 
 const isValid = computed(() => {
@@ -521,7 +539,11 @@ const isValid = computed(() => {
 
 const openReviewModal = (item: any) => {
   selectedReviewItem.value = item;
-  newReview.value = { rating: 0, description: "" };
+  newReview.value = {
+    rating: 0,
+    description: "",
+    images: [] as File[],
+  };
   showReviewDialog.value = true;
 };
 
@@ -536,24 +558,35 @@ const submitReview = async () => {
       "productId",
       selectedReviewItem.value.product_id.toString(),
     );
-    if (selectedReviewItem.value.product_pack_id) {
-      formData.append(
-        "product_pack_id",
-        selectedReviewItem.value.product_pack_id.toString(),
-      );
+    let pPackId = "null";
+    if (selectedReviewItem.value.product_pack) {
+      pPackId = typeof selectedReviewItem.value.product_pack === 'object' 
+        ? selectedReviewItem.value.product_pack.id?.toString() || "null"
+        : selectedReviewItem.value.product_pack.toString();
     }
+    
+    formData.append("product_pack_id", pPackId);
     formData.append("rating", newReview.value.rating.toString());
     formData.append("description", newReview.value.description);
+
+    // Append attachments for image updates
+    if (newReview.value.images && newReview.value.images.length > 0) {
+      newReview.value.images.forEach((file: File) => {
+        formData.append("attachments[]", file);
+      });
+    }
 
     const api = useApi();
     const response: any = await api.post("/review", formData);
 
-    const payload = response.data || response;
-    if (payload.success) {
+    if (response && response.success) {
       showSnackbar("Review submitted successfully!", "success");
       showReviewDialog.value = false;
+      if (selectedReviewItem.value) {
+        selectedReviewItem.value.is_reviewed = true;
+      }
     } else {
-      showSnackbar(payload.message || "Failed to submit review.", "error");
+      showSnackbar(response?.message || "Failed to submit review.", "error");
     }
   } catch (e: any) {
     console.error("Error submitting review:", e);
@@ -591,19 +624,41 @@ const getStatusColor = (status: string) => {
 };
 
 const canCancel = computed(() => {
-  const status = order.value?.status?.toLowerCase() || "";
+  if (!order.value) return false;
+  const status = String(order.value.status || "").toLowerCase();
+  console.log("canCancel status:", status, "order:", order.value);
   return (
     status.includes("pending") ||
     status.includes("place") ||
-    status.includes("processing")
+    status.includes("processing") ||
+    status === "1" || // Assuming 1 is pending/placed
+    status === "2" ||
+    status === "4"
   );
 });
 
 const downloadingInvoice = ref(false);
-const downloadInvoice = () => {
+const downloadInvoice = async () => {
   if (!order.value) return;
-  const api = useApi();
-  window.open(`${api.baseURL}/orders/${order.value.id}/invoice`, "_blank");
+  downloadingInvoice.value = true;
+  try {
+    const authStore = useAuthStore();
+    const api = useApi();
+    
+    let defaultAddress = null;
+    const response = await api.get("/user_addresses", { userId: authStore.user?.id });
+    if (response.success && response.data) {
+      defaultAddress = response.data.find((a: any) => a.is_default === 1 || a.is_default === true) || response.data[0] || null;
+    }
+    
+    const { generateInvoice } = await import("~/utils/invoiceService");
+    await generateInvoice(order.value, defaultAddress);
+  } catch (error: any) {
+    console.error("Error downloading invoice:", error);
+    showSnackbar(`Failed to download invoice: ${error?.message || error}`, "error");
+  } finally {
+    downloadingInvoice.value = false;
+  }
 };
 
 const cancelling = ref(false);
@@ -617,18 +672,17 @@ const handleCancelOrder = async () => {
     const response: any = await api.post(
       `/orders/${order.value.id}/order_statuses`,
       {
-        status_id: 8, // Cancelled status ID
+        status_id: '8', // Cancelled status ID
         date: new Date().toISOString(),
       },
     );
 
-    const payload = response.data || response;
-    if (payload.success) {
+    if (response && (response.success === true || response.status === 'success' || (response.data && response.data.id))) {
       showSnackbar("Order cancelled successfully!", "success");
       showCancelDialog.value = false;
       await fetchOrderDetails();
     } else {
-      showSnackbar(payload.message || "Failed to cancel order.", "error");
+      showSnackbar(response?.message || "Failed to cancel order.", "error");
     }
   } catch (e: any) {
     console.error("Error cancelling order:", e);
@@ -649,9 +703,23 @@ const mapOrderDetailsToItems = (ordersList: any[]) => {
   };
 
   return ordersList.map((order: any) => {
+    let computedStatus = order.status;
+    if (order.order_statuses && order.order_statuses.length > 0) {
+      const lastStatus = order.order_statuses[order.order_statuses.length - 1];
+      if (lastStatus.status && lastStatus.status.name) {
+        computedStatus = lastStatus.status.name;
+      }
+    }
+
+    if (!computedStatus || computedStatus === "null" || computedStatus.trim() === "") {
+      computedStatus = "Order placed";
+    }
+
     const items = (order.order_details || []).map((detail: any) => {
       // Resolve product pack matching
-      const packId = detail.product_pack;
+      const rawPack = detail.product_pack;
+      const packId = typeof rawPack === 'object' && rawPack !== null ? rawPack.id : rawPack;
+      
       const matchingPack = detail.product?.product_packs?.find(
         (p: any) => p.id == packId || p.product_pack == packId,
       );
@@ -670,13 +738,16 @@ const mapOrderDetailsToItems = (ordersList: any[]) => {
             ? parseFloat(detail.order_detail_cost) / detail.quantity
             : parseFloat(detail.order_detail_cost || 0),
         pack: matchingPack || { value: detail.product_pack },
+        product_pack: detail.product_pack,
         flavour: detail.flavour,
         kind_of_flower: detail.kind_of_flower,
         write_on_cake: detail.write_on_cake,
+        is_reviewed: false,
       };
     });
     return {
       ...order,
+      status: computedStatus,
       items,
     };
   });
@@ -691,6 +762,42 @@ const fetchOrderDetails = async () => {
   if (response.success && response.data) {
     const mapped = mapOrderDetailsToItems([response.data]);
     order.value = mapped[0];
+
+    // Fetch user reviews to determine if items are already reviewed
+    if (authStore.user?.id) {
+      const reviewsResponse: any = await api.post("/review", {
+        userId: authStore.user.id,
+        isOnlyFetch: 1,
+      });
+      if (reviewsResponse && reviewsResponse.success && reviewsResponse.data) {
+        const userReviews = reviewsResponse.data;
+        if (order.value?.items) {
+          order.value.items.forEach((item: any) => {
+            const rawPack = item.product_pack;
+            const packId = typeof rawPack === 'object' && rawPack !== null 
+              ? String(rawPack.id) 
+              : (rawPack !== undefined && rawPack !== null ? String(rawPack) : 'null');
+              
+            const hasReviewed = userReviews.some((review: any) => {
+              if (review.product_id != item.product_id) return false;
+              
+              const rPackRaw = review.product_pack_id;
+              const reviewPackId = (rPackRaw === null || rPackRaw === undefined) ? 'null' : String(rPackRaw);
+              
+              const isMatch = reviewPackId === packId;
+              if (isMatch) {
+                console.log(`Matched review for product ${item.product_id} with pack ${packId}`);
+              }
+              return isMatch;
+            });
+            console.log(`Item ${item.product_id} (pack: ${packId}) hasReviewed: ${hasReviewed}`);
+            if (hasReviewed) {
+              item.is_reviewed = true;
+            }
+          });
+        }
+      }
+    }
   }
 
   loading.value = false;

@@ -157,6 +157,35 @@
             </v-btn>
           </v-form>
 
+          <!-- OR Divider -->
+          <div class="d-flex align-center my-6">
+            <v-divider />
+            <span class="px-4 text-overline text-grey">OR</span>
+            <v-divider />
+          </div>
+
+          <!-- Social Login -->
+          <div class="d-flex justify-center">
+            <v-btn
+              variant="outlined"
+              color="secondary"
+              block
+              size="large"
+              class="font-weight-bold"
+              style="
+                border-color: var(--border-color) !important;
+                border-radius: 6px !important;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-size: 0.75rem;
+              "
+              @click="handleGoogleLogin"
+            >
+              <v-icon start>mdi-google</v-icon>
+              Google
+            </v-btn>
+          </div>
+
           <!-- Login Link -->
           <p class="text-center mt-6 text-grey text-body-2">
             Already have an account?
@@ -170,11 +199,23 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Success Modal -->
+    <ClientOnly>
+      <RegistrationSuccessModal
+        v-model="showSuccessModal"
+        :userName="registeredUserName"
+        :isWholesaler="selectedRole === 'Distributor'"
+        :bonusPoints="100"
+        @closed="authStore.isLoggedIn ? router.push('/') : router.push('/login')"
+      />
+    </ClientOnly>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from "@/stores/auth";
+import RegistrationSuccessModal from "~/components/RegistrationSuccessModal.vue";
 
 const router = useRouter();
 
@@ -183,6 +224,8 @@ const formValid = ref(false);
 const loading = ref(false);
 const showPassword = ref(false);
 const selectedRole = ref("User");
+const showSuccessModal = ref(false);
+const registeredUserName = ref("");
 
 const form = reactive({
   firstName: "",
@@ -242,6 +285,69 @@ const showSnackbar = inject(
 );
 
 // Methods
+declare const google: any;
+
+useHead({
+  script: [
+    { src: 'https://accounts.google.com/gsi/client', async: true, defer: true }
+  ]
+});
+
+const handleGoogleLogin = () => {
+  if (typeof google === 'undefined') {
+    showSnackbar("Google Login is loading. Please try again in a moment.", "info");
+    return;
+  }
+  
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: '990776187523-31hv31ogtp5c4pdpf5t5f4d687ve4tct.apps.googleusercontent.com',
+    scope: 'email profile',
+    callback: async (response: any) => {
+      if (response.access_token) {
+        loading.value = true;
+        const authStore = useAuthStore();
+        try {
+          // Fetch user info from Google
+          const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${response.access_token}` }
+          }).then(res => res.json());
+          
+          if (userInfo.email) {
+            const loginResult = await authStore.login(
+              userInfo.email, 
+              undefined, 
+              selectedRole.value as "User" | "Distributor", 
+              true, 
+              "GOOGLE"
+            );
+            
+            if (loginResult.success) {
+              if (loginResult.is_new_user) {
+                registeredUserName.value = userInfo.name || userInfo.email;
+                showSuccessModal.value = true;
+              } else {
+                showSnackbar("Logged in successfully with Google!", "success");
+                router.push("/");
+              }
+            } else {
+              showSnackbar(loginResult.message || "Failed to log in with Google", "error");
+            }
+          } else {
+             showSnackbar("Could not retrieve email from Google", "error");
+          }
+        } catch (e) {
+          console.error("Google Login Error:", e);
+          showSnackbar("Failed to fetch Google profile.", "error");
+        } finally {
+          loading.value = false;
+        }
+      }
+    },
+  });
+  
+  client.requestAccessToken();
+};
+
 const handleRegister = async () => {
   if (!formValid.value) return;
 
@@ -269,8 +375,8 @@ const handleRegister = async () => {
   loading.value = false;
 
   if (result.success) {
-    showSnackbar("Registration successful! Please login.", "success");
-    router.push("/login");
+    registeredUserName.value = form.firstName;
+    showSuccessModal.value = true;
   } else {
     showSnackbar(result.message || "Registration failed", "error");
   }

@@ -175,6 +175,67 @@
             </div>
           </v-card-text>
         </v-card>
+
+        <!-- GST Number Optional Field -->
+        <v-card
+          class="mt-6 mb-6"
+          variant="outlined"
+          style="
+            border-color: var(--border-color);
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+          "
+        >
+          <v-card-title
+            class="d-flex align-center py-4 px-6"
+            style="
+              border-bottom: 1px solid var(--border-color);
+              font-family: &quot;Cormorant Garamond&quot;, serif !important;
+              font-size: 1.25rem;
+              font-weight: 600;
+              color: var(--secondary);
+            "
+          >
+            <v-icon start color="primary" class="mr-2">mdi-file-document-outline</v-icon>
+            GST Information
+          </v-card-title>
+
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center justify-space-between">
+              <div>
+                <div class="text-subtitle-1 font-weight-bold">
+                  Use GST Number
+                </div>
+                <div class="text-caption text-grey">
+                  Add GST number for business purchases (Optional)
+                </div>
+              </div>
+              <v-switch v-model="addGst" color="primary" inset hide-details />
+            </div>
+
+            <!-- GST Input Field -->
+            <v-expand-transition>
+              <div v-if="addGst" class="mt-4">
+                <v-text-field
+                  v-model="gstNumberInput"
+                  label="Enter GST Number"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                  :rules="[
+                    v => !v || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(v) || 'Invalid GST format'
+                  ]"
+                  placeholder="e.g. 22AAAAA0000A1Z5"
+                >
+                  <template v-slot:prepend-inner>
+                    <v-icon color="grey">mdi-percent</v-icon>
+                  </template>
+                </v-text-field>
+              </div>
+            </v-expand-transition>
+          </v-card-text>
+        </v-card>
       </v-col>
 
       <!-- Right Column: Order Summary -->
@@ -739,6 +800,8 @@ const addresses = ref<any[]>([]);
 const selectedAddressId = ref<number | null>(null);
 const paymentMethod = ref("COD");
 const isGift = ref(false);
+const addGst = ref(false);
+const gstNumberInput = ref("");
 const discount = ref(0);
 const wholesalerDiscount = ref(0);
 const wholesalerDiscountsMap = ref<Record<number, number>>({});
@@ -1033,11 +1096,7 @@ const placeOrder = async () => {
 
   // Get fees from User Config (Company)
   const company = authStore.user?.companies?.[0];
-  const companyId = company?.id || 1;
-  const deliveryCharges = parseAmount(company?.deliveryCharges || 0);
-  const packagingCharges = parseAmount(company?.packagingCharges || 0);
-  const platformFee = parseAmount(company?.platformFee || 0);
-  const gstNumber = company?.gstNumber || "";
+  const gstNumber = addGst.value ? gstNumberInput.value : "";
 
   // Order Details Construction (matching Mobile App Flavour-Specific image logic and exact keys)
   const orderDetails = cartStore.selectedItems.map((item: any) => {
@@ -1103,7 +1162,7 @@ const placeOrder = async () => {
   // Fully aligned mobile app payload structure
   const payload = {
     user_id: authStore.user?.id,
-    company_id: companyId,
+    company_id: company?.id || 1,
     address_id: selectedAddressId.value,
     paymentmode: paymentMethod.value,
     payment_mode: paymentMethod.value, // Send both keys for safe API mapping
@@ -1259,10 +1318,18 @@ onMounted(async () => {
           map[d.product_id] = parseFloat(d.discount);
         });
         wholesalerDiscountsMap.value = map;
+        calculateWholesalerDiscount();
       }
     } catch (e) {
       console.error("Failed to fetch wholesaler discounts", e);
     }
+  }
+
+  // Auto-fill GST if user has it
+  const company = authStore.user?.companies?.[0];
+  if (company && company.gstNumber) {
+    addGst.value = true;
+    gstNumberInput.value = company.gstNumber;
   }
 
   calculateWholesalerDiscount();

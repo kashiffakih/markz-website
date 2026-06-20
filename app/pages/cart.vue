@@ -106,22 +106,24 @@
 
               <!-- Quantity Controls -->
               <v-col cols="6" md="3">
-                <div class="d-flex align-center justify-center">
+                <div class="d-flex align-center justify-center bg-grey-lighten-4 rounded-pill px-2 py-1" style="width: max-content; margin: 0 auto;">
                   <v-btn
                     icon
-                    size="small"
-                    variant="outlined"
+                    size="x-small"
+                    variant="text"
+                    color="grey-darken-2"
                     :disabled="!!loadingActions[item.id]"
                     :loading="loadingActions[item.id] === 'decrement'"
                     @click="updateQuantity(item.id, false, item)"
                   >
                     <v-icon>mdi-minus</v-icon>
                   </v-btn>
-                  <span class="mx-4 text-h6">{{ item.quantity }}</span>
+                  <span class="mx-4 text-subtitle-1 font-weight-bold">{{ item.quantity }}</span>
                   <v-btn
                     icon
-                    size="small"
-                    variant="outlined"
+                    size="x-small"
+                    variant="text"
+                    color="grey-darken-2"
                     :disabled="!!loadingActions[item.id]"
                     :loading="loadingActions[item.id] === 'increment'"
                     @click="updateQuantity(item.id, true, item)"
@@ -131,14 +133,27 @@
                 </div>
               </v-col>
 
-              <!-- Price -->
-              <v-col cols="6" md="2" class="text-right d-none d-md-block">
-                <p class="text-h6 font-weight-bold text-secondary">
-                  ₹{{ (item.price * item.quantity).toLocaleString() }}
-                </p>
-                <p class="text-caption text-grey">
-                  ₹{{ item.price.toLocaleString() }} each
-                </p>
+              <!-- Price & Actions -->
+              <v-col cols="6" md="2" class="text-right d-flex flex-column align-end justify-center">
+                <v-btn
+                  icon="mdi-trash-can-outline"
+                  variant="text"
+                  color="error"
+                  size="small"
+                  class="mb-2"
+                  :disabled="!!loadingActions[item.id]"
+                  :loading="loadingActions[item.id] === 'delete'"
+                  @click="removeItem(item.id)"
+                  title="Remove Item"
+                ></v-btn>
+                <div class="d-none d-md-block">
+                  <p class="text-h6 font-weight-bold text-secondary mb-0" style="line-height: 1;">
+                    ₹{{ (item.price * item.quantity).toLocaleString() }}
+                  </p>
+                  <p class="text-caption text-grey mt-1 mb-0">
+                    ₹{{ item.price.toLocaleString() }} each
+                  </p>
+                </div>
               </v-col>
             </v-row>
           </v-card-text>

@@ -159,6 +159,17 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Success Modal -->
+    <ClientOnly>
+      <RegistrationSuccessModal
+        v-model="showSuccessModal"
+        :userName="registeredUserName"
+        :isWholesaler="loginRole === 'Distributor'"
+        :bonusPoints="100"
+        @closed="router.push('/')"
+      />
+    </ClientOnly>
   </v-container>
 </template>
 
@@ -177,6 +188,9 @@ const loginRole = ref<"User" | "Distributor">("User");
 
 const email = ref("");
 const password = ref("");
+
+const showSuccessModal = ref(false);
+const registeredUserName = ref("");
 
 // Validation rules
 const emailRules = [
@@ -220,9 +234,68 @@ const handleLogin = async () => {
   }
 };
 
+declare const google: any;
+
+useHead({
+  script: [
+    { src: 'https://accounts.google.com/gsi/client', async: true, defer: true }
+  ]
+});
+
 const handleGoogleLogin = () => {
-  // TODO: Implement Google login
-  showSnackbar("Google login coming soon", "info");
+  if (typeof google === 'undefined') {
+    showSnackbar("Google Login is loading. Please try again in a moment.", "info");
+    return;
+  }
+  
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: '990776187523-31hv31ogtp5c4pdpf5t5f4d687ve4tct.apps.googleusercontent.com',
+    scope: 'email profile',
+    callback: async (response: any) => {
+      if (response.access_token) {
+        loading.value = true;
+        try {
+          // Fetch user info from Google
+          const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${response.access_token}` }
+          }).then(res => res.json());
+          
+          if (userInfo.email) {
+            const loginResult = await authStore.login(
+              userInfo.email, 
+              undefined, 
+              loginRole.value, 
+              true, 
+              "GOOGLE"
+            );
+            
+            if (loginResult.success) {
+              if (loginResult.is_new_user) {
+                registeredUserName.value = userInfo.name || userInfo.email;
+                showSuccessModal.value = true;
+              } else {
+                showSnackbar("Logged in successfully with Google!", "success");
+                const route = useRoute();
+                const redirectPath = (route.query.redirect as string) || "/";
+                router.push(redirectPath);
+              }
+            } else {
+              showSnackbar(loginResult.message || "Failed to log in with Google", "error");
+            }
+          } else {
+             showSnackbar("Could not retrieve email from Google", "error");
+          }
+        } catch (e) {
+          console.error("Google Login Error:", e);
+          showSnackbar("Failed to fetch Google profile.", "error");
+        } finally {
+          loading.value = false;
+        }
+      }
+    },
+  });
+  
+  client.requestAccessToken();
 };
 
 // Redirect if already logged in

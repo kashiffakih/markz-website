@@ -32,8 +32,9 @@
               v-for="(img, idx) in activeCarouselImages"
               :key="idx"
               :src="img.url"
-              cover
               aspect-ratio="1"
+              style="cursor: zoom-in;"
+              @click="openZoom(img.url)"
             >
               <template v-slot:placeholder>
                 <div class="d-flex align-center justify-center fill-height">
@@ -81,10 +82,9 @@
 
             <h1 class="text-h4 font-weight-bold mb-2">{{ product.name }}</h1>
 
-            <!-- Rating Placeholder -->
-            <div class="d-flex align-center mb-4">
+            <div class="d-flex align-center mb-4" v-if="product.total_reviews > 0">
               <v-rating
-                :model-value="4.5"
+                :model-value="Number(product.rating) || 0"
                 readonly
                 half-increments
                 density="compact"
@@ -292,7 +292,7 @@
             <ProductDescription :product="product" />
             
             <!-- Product Reviews -->
-            <ProductReviews :product-id="product.id" :pack-id="selectedPack?.id || ''" />
+            <ProductReviews :product-id="product.id" />
           </div>
         </v-col>
       </v-row>
@@ -351,6 +351,14 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+      <!-- Image Zoom Dialog -->
+      <v-dialog v-model="zoomDialog" fullscreen>
+        <div class="d-flex align-center justify-center fill-height bg-black position-relative" style="opacity: 0.95;">
+          <v-btn icon="mdi-close" variant="text" color="white" class="position-absolute" style="top: 16px; right: 16px; z-index: 10;" @click="zoomDialog = false" />
+          <v-img :src="zoomedImageUrl" max-height="90vh" max-width="90vw" @click="zoomDialog = false" style="cursor: zoom-out;" />
+        </div>
+      </v-dialog>
     </div>
   </v-container>
 </template>
@@ -383,6 +391,14 @@ const showNotifyMe = ref(false);
 const selectedUnit = ref("");
 const selectedPack = ref<any>(null); // New ref for selected pack
 const qty = ref(1); // New ref for quantity
+
+const zoomDialog = ref(false);
+const zoomedImageUrl = ref("");
+
+const openZoom = (url: string) => {
+  zoomedImageUrl.value = url;
+  zoomDialog.value = true;
+};
 
 // Parsed absolute image urls and metadata
 interface ProductImageItem {

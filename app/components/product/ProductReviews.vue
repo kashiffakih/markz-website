@@ -28,11 +28,11 @@
           <div class="d-flex align-center">
             <v-avatar color="primary-lighten-4" size="40" class="mr-3">
               <span class="text-primary font-weight-bold">
-                {{ review.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+                {{ review.user?.first_name?.charAt(0)?.toUpperCase() || 'U' }}
               </span>
             </v-avatar>
             <div>
-              <div class="font-weight-bold">{{ review.user?.name || 'Anonymous' }}</div>
+              <div class="font-weight-bold">{{ review.user?.first_name ? `${review.user.first_name} ${review.user.last_name || ''}`.trim() : 'Anonymous' }}</div>
               <div class="text-caption text-grey">{{ formatDate(review.created_at) }}</div>
             </div>
           </div>
@@ -59,7 +59,7 @@
             flat
             border
           >
-            <v-img :src="getImageUrl(img.imagepath)" cover height="100%"></v-img>
+            <v-img :src="getImageUrl(img.image_path)" cover height="100%"></v-img>
           </v-card>
         </div>
       </v-card>
@@ -117,17 +117,12 @@ const fetchReviews = async () => {
       formData.append('product_pack_id', props.packId.toString())
     }
     formData.append('isOnlyFetch', '1')
-    
-    if (authStore.user?.id) {
-      formData.append('userId', authStore.user.id.toString())
-    }
 
     const api = useApi()
     const response: any = await api.post('/review', formData)
 
-    const payload = response.data || response
-    if (payload.success) {
-      reviews.value = payload.data || []
+    if (response.success) {
+      reviews.value = response.data || []
     }
   } catch (e) {
     console.error('Error fetching reviews:', e)

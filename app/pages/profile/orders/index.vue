@@ -139,6 +139,18 @@ const mapOrderDetailsToItems = (ordersList: any[]) => {
   };
 
   return ordersList.map((order: any) => {
+    let computedStatus = order.status;
+    if (order.order_statuses && order.order_statuses.length > 0) {
+      const lastStatus = order.order_statuses[order.order_statuses.length - 1];
+      if (lastStatus.status && lastStatus.status.name) {
+        computedStatus = lastStatus.status.name;
+      }
+    }
+
+    if (!computedStatus || computedStatus === "null" || computedStatus.trim() === "") {
+      computedStatus = "Order placed";
+    }
+
     const items = (order.order_details || []).map((detail: any) => {
       return {
         id: detail.id,
@@ -155,6 +167,7 @@ const mapOrderDetailsToItems = (ordersList: any[]) => {
     });
     return {
       ...order,
+      status: computedStatus,
       items,
     };
   });
