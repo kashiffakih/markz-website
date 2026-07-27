@@ -139,6 +139,21 @@ export const useProductStore = defineStore('product', {
             }
         },
 
+        async fetchTags() {
+             const api = useApi();
+            try {
+                const response: any = await api.get('/tags', { with_products: 1 });
+                const payload = response.data || response;
+                if (Array.isArray(payload)) {
+                   this.tags = payload;
+                } else if (response.success && response.data) {
+                   this.tags = response.data;
+                }
+            } catch (error) {
+                console.error('Failed to fetch tags:', error);
+            }
+        },
+
         async fetchCategoryWiseProducts(categoryId: number, productId: number) {
             const api = useApi();
             try {
@@ -168,28 +183,35 @@ export const useProductStore = defineStore('product', {
         },
 
         // Helper to get product price based on role
-        getPrice(product: Product, isDistributor: boolean): { price: number, originalPrice: number, discount: number } {
+        getPrice(product: Product, isDistributor: boolean): { price: number, originalPrice: number, discount: number, hasValidPrice: boolean } {
             if (!product.product_prices || product.product_prices.length === 0) {
-                return { price: 0, originalPrice: 0, discount: 0 };
+                return { price: 0, originalPrice: 0, discount: 0, hasValidPrice: false };
             }
 
             const priceObj = product.product_prices[0];
             if (!priceObj) {
-                return { price: 0, originalPrice: 0, discount: 0 };
+                return { price: 0, originalPrice: 0, discount: 0, hasValidPrice: false };
             }
-            let price = priceObj.price;
-            let offerPrice = priceObj.offer_price;
+            
+            let price = 0;
+            let offerPrice = 0;
 
             if (isDistributor) {
-                price = priceObj.distributor_price || price;
-                offerPrice = priceObj.distributor_offer_price || offerPrice;
+                price = parseFloat(priceObj.distributor_price?.toString() || '0');
+                offerPrice = parseFloat(priceObj.distributor_offer_price?.toString() || '0');
+            } else {
+                price = parseFloat(priceObj.price?.toString() || '0');
+                offerPrice = parseFloat(priceObj.offer_price?.toString() || '0');
             }
 
-            // If no offer price or offer price is higher (invalid), use normal price
-            const activePrice = (offerPrice && offerPrice < price) ? offerPrice : price;
+            if (!price || price <= 0) {
+                return { price: 0, originalPrice: 0, discount: 0, hasValidPrice: false };
+            }
+
+            const activePrice = (offerPrice && offerPrice > 0 && offerPrice < price) ? offerPrice : price;
             const originalPrice = price; // The "crossed out" price
 
-             // Calculate discount percentage
+            // Calculate discount percentage
             let discount = 0;
             if (originalPrice > activePrice) {
                 discount = Math.round(((originalPrice - activePrice) / originalPrice) * 100);
@@ -198,7 +220,8 @@ export const useProductStore = defineStore('product', {
             return {
                 price: activePrice,
                 originalPrice: originalPrice,
-                discount
+                discount,
+                hasValidPrice: true
             };
         },
 

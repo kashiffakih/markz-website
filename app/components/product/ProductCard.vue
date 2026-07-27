@@ -77,39 +77,48 @@
       <div>
         <!-- Pricing -->
         <div class="d-flex align-center ga-2 mb-4">
-          <span class="text-subtitle-1 font-weight-bold text-secondary" style="font-size: 1.15rem !important;">
-            ₹{{ displayPrice.toLocaleString() }}
-          </span>
-          <span
-            v-if="originalPrice > displayPrice"
-            class="text-caption text-grey text-decoration-line-through"
-            style="opacity: 0.7; font-size: 0.85rem !important;"
-          >
-            ₹{{ originalPrice.toLocaleString() }}
-          </span>
+          <template v-if="priceInfo.hasValidPrice">
+            <span class="text-subtitle-1 font-weight-bold text-secondary" style="font-size: 1.15rem !important;">
+              ₹{{ displayPrice.toLocaleString() }}
+            </span>
+            <span
+              v-if="originalPrice > displayPrice"
+              class="text-caption text-grey text-decoration-line-through"
+              style="opacity: 0.7; font-size: 0.85rem !important;"
+            >
+              ₹{{ originalPrice.toLocaleString() }}
+            </span>
+          </template>
+          <template v-else>
+            <span class="text-caption font-weight-bold text-grey-darken-1">
+              Price Not Available
+            </span>
+          </template>
         </div>
 
         <!-- Quantity Controls or Add to Cart -->
-        <div v-if="quantityInCart > 0" class="d-flex align-center justify-space-between quantity-controls py-1 px-2">
-           <v-btn icon size="small" variant="text" :loading="updatingQuantity" @click.stop="decrementQuantity" class="qty-btn">
-              <v-icon size="20">mdi-minus</v-icon>
-           </v-btn>
-           <span class="font-weight-bold text-subtitle-1" style="min-width: 24px; text-align: center;">{{ quantityInCart }}</span>
-           <v-btn icon size="small" variant="text" :loading="updatingQuantity" @click.stop="incrementQuantity" class="qty-btn">
-              <v-icon size="20">mdi-plus</v-icon>
-           </v-btn>
-        </div>
-        
-        <v-btn
-          v-else
-          block
-          variant="flat"
-          class="add-to-cart-btn"
-          :loading="addingToCart"
-          @click.stop="handleAddToCart"
-        >
-          Add to Cart
-        </v-btn>
+        <template v-if="priceInfo.hasValidPrice">
+          <div v-if="quantityInCart > 0" class="d-flex align-center justify-space-between quantity-controls py-1 px-2">
+             <v-btn icon size="small" variant="text" :loading="updatingQuantity" @click.stop="decrementQuantity" class="qty-btn">
+                <v-icon size="20">mdi-minus</v-icon>
+             </v-btn>
+             <span class="font-weight-bold text-subtitle-1" style="min-width: 24px; text-align: center;">{{ quantityInCart }}</span>
+             <v-btn icon size="small" variant="text" :loading="updatingQuantity" @click.stop="incrementQuantity" class="qty-btn">
+                <v-icon size="20">mdi-plus</v-icon>
+             </v-btn>
+          </div>
+          
+          <v-btn
+            v-else
+            block
+            variant="flat"
+            class="add-to-cart-btn"
+            :loading="addingToCart"
+            @click.stop="handleAddToCart"
+          >
+            Add to Cart
+          </v-btn>
+        </template>
       </div>
     </v-card-text>
     <!-- Variant Selection Dialog -->
@@ -128,7 +137,10 @@
              </v-avatar>
              <div>
                <div class="font-weight-bold text-body-1 text-secondary" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ product.name }}</div>
-               <div class="text-primary font-weight-bold mt-1">₹{{ displayPrice.toLocaleString() }}</div>
+               <div class="text-primary font-weight-bold mt-1">
+                 <template v-if="priceInfo.hasValidPrice">₹{{ displayPrice.toLocaleString() }}</template>
+                 <template v-else>Price Not Available</template>
+               </div>
              </div>
            </div>
 
@@ -185,7 +197,7 @@
                     class="font-weight-bold mb-2 px-4"
                     style="border-radius: 8px !important;"
                   >
-                    {{ variant.size }} - ₹{{ variant.price.toLocaleString() }}
+                    {{ variant.size }} - <template v-if="variant.price > 0">₹{{ Math.round(variant.price).toLocaleString() }}</template><template v-else>N/A</template>
                   </v-chip>
                 </v-chip-group>
              </div>
@@ -246,7 +258,8 @@ const authStore = useAuthStore();
 const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
-const showSnackbar = inject<any>("showSnackbar");
+
+const showSnackbar = inject<(text: string, color?: string) => void>("showSnackbar");
 
 const addingToCart = ref(false);
 const updatingQuantity = ref(false);
@@ -293,37 +306,48 @@ const productImage = computed(() => {
 const priceInfo = computed(() => {
   const prices = props.product?.product_prices;
   if (!prices || prices.length === 0) {
-    return { price: 0, offerPrice: 0 };
+    return { price: 0, offerPrice: 0, hasValidPrice: false };
   }
 
   const priceObj = prices[0];
   if (!priceObj) {
-    return { price: 0, offerPrice: 0 };
+    return { price: 0, offerPrice: 0, hasValidPrice: false };
   }
 
-  // Distributor pricing
-  if (authStore.isDistributor) {
-    return {
-      price: priceObj.distributor_price || priceObj.price,
-      offerPrice: priceObj.distributor_offer_price || priceObj.offer_price || 0,
-    };
+  const isDistributor = authStore.activeRole === "Distributor";
+  let price = 0;
+  let offerPrice = 0;
+
+  if (isDistributor) {
+    price = parseFloat(priceObj.distributor_price?.toString() || "0");
+    offerPrice = parseFloat(priceObj.distributor_offer_price?.toString() || "0");
+  } else {
+    price = parseFloat(priceObj.price?.toString() || "0");
+    offerPrice = parseFloat(priceObj.offer_price?.toString() || "0");
   }
 
-  // Regular user pricing
+  if (price <= 0) {
+    return { price: 0, offerPrice: 0, hasValidPrice: false };
+  }
+
+  const validOffer = offerPrice > 0 && offerPrice < price ? offerPrice : 0;
   return {
-    price: priceObj.price || 0,
-    offerPrice: priceObj.offer_price || 0,
+    price,
+    offerPrice: validOffer,
+    hasValidPrice: true
   };
 });
 
 const displayPrice = computed(() => {
-  const { price, offerPrice } = priceInfo.value;
-  return offerPrice > 0 && offerPrice < price ? offerPrice : price;
+  const { price, offerPrice, hasValidPrice } = priceInfo.value;
+  if (!hasValidPrice) return 0;
+  return Math.round(offerPrice > 0 && offerPrice < price ? offerPrice : price);
 });
 
-const originalPrice = computed(() => priceInfo.value.price);
+const originalPrice = computed(() => Math.round(priceInfo.value.price));
 
 const discountPercent = computed(() => {
+  if (!priceInfo.value.hasValidPrice) return 0;
   const { price, offerPrice } = priceInfo.value;
   if (price > 0 && offerPrice > 0 && offerPrice < price) {
     return Math.round(((price - offerPrice) / price) * 100);
@@ -333,20 +357,41 @@ const discountPercent = computed(() => {
 
 // Methods
 const availableVariants = computed(() => {
+  const isDistributor = authStore.activeRole === "Distributor";
   if (props.product?.product_packs && props.product.product_packs.length > 0) {
     return props.product.product_packs.map(p => {
       const priceObj = props.product.product_prices?.find(price => price.product_pack_id == p.id);
-      let pPrice = priceObj ? (priceObj.offer_price && priceObj.offer_price > 0 && priceObj.offer_price < priceObj.price ? priceObj.offer_price : priceObj.price) : 0;
+      let pPrice = 0;
+      if (priceObj) {
+        if (isDistributor) {
+          const dPrice = parseFloat(priceObj.distributor_price?.toString() || "0");
+          const dOffer = parseFloat(priceObj.distributor_offer_price?.toString() || "0");
+          pPrice = (dOffer > 0 && dOffer < dPrice) ? dOffer : dPrice;
+        } else {
+          const uPrice = parseFloat(priceObj.price?.toString() || "0");
+          const uOffer = parseFloat(priceObj.offer_price?.toString() || "0");
+          pPrice = (uOffer > 0 && uOffer < uPrice) ? uOffer : uPrice;
+        }
+      }
       return {
         id: p.id,
         color: p.unit?.name || 'Standard',
         size: p.value || 'Standard',
-        price: pPrice
+        price: Math.round(pPrice)
       };
     });
   } else if (props.product?.product_prices && props.product.product_prices.length > 0) {
     return props.product.product_prices.map((p, index) => {
-      let pPrice = p.offer_price && p.offer_price > 0 && p.offer_price < p.price ? p.offer_price : p.price;
+      let pPrice = 0;
+      if (isDistributor) {
+        const dPrice = parseFloat(p.distributor_price?.toString() || "0");
+        const dOffer = parseFloat(p.distributor_offer_price?.toString() || "0");
+        pPrice = (dOffer > 0 && dOffer < dPrice) ? dOffer : dPrice;
+      } else {
+        const uPrice = parseFloat(p.price?.toString() || "0");
+        const uOffer = parseFloat(p.offer_price?.toString() || "0");
+        pPrice = (uOffer > 0 && uOffer < uPrice) ? uOffer : uPrice;
+      }
       
       let color = 'Standard';
       let size = p.pack || ('Variant ' + (p.product_pack_id || index + 1));
@@ -361,7 +406,7 @@ const availableVariants = computed(() => {
         id: p.product_pack_id || p.pack || "default",
         color: color,
         size: size,
-        price: pPrice
+        price: Math.round(pPrice)
       };
     });
   }
@@ -380,9 +425,9 @@ const sizesForSelectedColor = computed(() => {
 });
 
 const handleAddToCart = async () => {
-  if (!props.product) return;
+  if (!props.product || !priceInfo.value.hasValidPrice) return;
   if (!authStore.isLoggedIn) {
-    router.push("/login");
+    router.push("/login?redirect=" + router.currentRoute.value.fullPath);
     return;
   }
 
@@ -400,6 +445,11 @@ const handleAddToCart = async () => {
 };
 
 const confirmAddToCart = async () => {
+  if (!authStore.isLoggedIn) {
+    showVariantDialog.value = false;
+    router.push("/login?redirect=" + router.currentRoute.value.fullPath);
+    return;
+  }
   if (!selectedPackId.value) {
     validationError.value = true;
     return;
@@ -412,12 +462,22 @@ const confirmAddToCart = async () => {
   
   if (packPriceObj) {
     const isDistributor = authStore.activeRole === "Distributor";
-    let price = parseFloat(packPriceObj.price?.toString() || "0");
-    let offerPrice = parseFloat(packPriceObj.offer_price?.toString() || "0");
+    let price = 0;
+    let offerPrice = 0;
     if (isDistributor) {
-      price = parseFloat(packPriceObj.distributor_price?.toString() || "0") || price;
-      offerPrice = parseFloat(packPriceObj.distributor_offer_price?.toString() || "0") || offerPrice;
+      price = parseFloat(packPriceObj.distributor_price?.toString() || "0");
+      offerPrice = parseFloat(packPriceObj.distributor_offer_price?.toString() || "0");
+    } else {
+      price = parseFloat(packPriceObj.price?.toString() || "0");
+      offerPrice = parseFloat(packPriceObj.offer_price?.toString() || "0");
     }
+
+    if (price <= 0) {
+      if (showSnackbar) showSnackbar("Price not available for selected option", "error");
+      addingToCart.value = false;
+      return;
+    }
+
     priceToAdd = (offerPrice > 0 && offerPrice < price) ? offerPrice : price;
   }
   
@@ -432,6 +492,10 @@ const confirmAddToCart = async () => {
 };
 
 const incrementQuantity = async () => {
+  if (!authStore.isLoggedIn) {
+    router.push("/login?redirect=" + router.currentRoute.value.fullPath);
+    return;
+  }
   if (!cartItem.value) return;
   updatingQuantity.value = true;
   await cartStore.modifyCart(props.product.id, packIdentifier.value, true, displayPrice.value, cartItem.value.flavor, cartItem.value.kindOfFlower);
@@ -439,6 +503,10 @@ const incrementQuantity = async () => {
 };
 
 const decrementQuantity = async () => {
+  if (!authStore.isLoggedIn) {
+    router.push("/login?redirect=" + router.currentRoute.value.fullPath);
+    return;
+  }
   if (!cartItem.value) return;
   updatingQuantity.value = true;
   await cartStore.modifyCart(props.product.id, packIdentifier.value, false, displayPrice.value, cartItem.value.flavor, cartItem.value.kindOfFlower);
@@ -448,17 +516,13 @@ const decrementQuantity = async () => {
 const toggleWishlist = async () => {
   if (!props.product) return;
   if (!authStore.isLoggedIn) {
-    router.push("/login");
+    router.push("/login?redirect=" + router.currentRoute.value.fullPath);
     return;
   }
   await wishlistStore.toggleWishlist(props.product.id);
 };
 
 const navigateToDetail = () => {
-  if (!authStore.isLoggedIn) {
-    router.push("/login");
-    return;
-  }
   if (props.product?.id) {
     router.push(`/products/${props.product.id}`);
   }

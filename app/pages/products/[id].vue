@@ -98,16 +98,16 @@
 
             <!-- Price -->
             <div class="d-flex align-center mb-4" v-if="selectedPack">
-              <div class="d-flex align-center">
+              <div v-if="priceInfo.hasValidPrice" class="d-flex align-center">
                 <span class="text-h4 font-weight-bold text-secondary"
-                  >₹{{ displayPrice }}</span
+                  >₹{{ displayPrice.toLocaleString() }}</span
                 >
                 <span
                   v-if="originalPrice > displayPrice"
                   class="text-h6 text-grey text-decoration-line-through ms-3"
                   style="font-size: 1.15rem !important;"
                 >
-                  ₹{{ originalPrice }}
+                  ₹{{ originalPrice.toLocaleString() }}
                 </span>
                 <v-chip
                   v-if="discountPercent > 0"
@@ -117,6 +117,9 @@
                 >
                   {{ discountPercent }}% OFF
                 </v-chip>
+              </div>
+              <div v-else class="text-h5 font-weight-bold text-grey-darken-1">
+                Price Not Available
               </div>
             </div>
 
@@ -172,8 +175,44 @@
 
             <!-- Stock Status & Actions -->
             <div class="mb-6">
+              <!-- Price Not Available -->
+              <div v-if="!priceInfo.hasValidPrice">
+                <div class="text-grey-darken-1 font-weight-bold mb-3 d-flex align-center text-subtitle-1">
+                  <v-icon start color="warning" icon="mdi-alert-circle-outline" />
+                  Price not available for your active role
+                </div>
+                <div class="d-flex ga-4 align-center">
+                  <v-btn
+                    variant="outlined"
+                    color="primary"
+                    size="large"
+                    icon
+                    @click="toggleWishlist"
+                    height="54"
+                    width="54"
+                    class="rounded-lg border-2"
+                  >
+                    <v-icon :color="isWishlisted ? 'error' : 'inherit'">
+                      {{ isWishlisted ? "mdi-heart" : "mdi-heart-outline" }}
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    variant="outlined"
+                    color="primary"
+                    size="large"
+                    icon
+                    @click="shareProduct"
+                    height="54"
+                    width="54"
+                    class="rounded-lg border-2"
+                  >
+                    <v-icon>mdi-share-variant-outline</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+
               <!-- Out of Stock -->
-              <div v-if="isOutOfStock || (selectedPack?.qty || 0) <= 0">
+              <div v-else-if="isOutOfStock || (selectedPack?.qty || 0) <= 0">
                 <div
                   class="text-error font-weight-bold mb-3 d-flex align-center"
                 >
@@ -462,12 +501,50 @@ const activeCarouselImages = computed<ProductImageItem[]>(() => {
   return allImagesRaw.value;
 });
 
+const sortPacksList = (packs: any[]) => {
+  return [...packs].sort((a: any, b: any) => {
+    const valA = (a.value || "").toString().trim();
+    const valB = (b.value || "").toString().trim();
+
+    const matchA = valA.match(/\d+(\.\d+)?/);
+    const matchB = valB.match(/\d+(\.\d+)?/);
+    const numA = matchA ? parseFloat(matchA[0]) : NaN;
+    const numB = matchB ? parseFloat(matchB[0]) : NaN;
+
+    if (!isNaN(numA) && !isNaN(numB)) {
+      if (numA !== numB) return numA - numB;
+    }
+
+    const sizeOrder: Record<string, number> = {
+      XXS: 1, XS: 2, S: 3, M: 4, L: 5, XL: 6, XXL: 7, "2XL": 7, XXXL: 8, "3XL": 8, "4XL": 9, "5XL": 10, "FREE SIZE": 100
+    };
+
+    const rankA = sizeOrder[valA.toUpperCase()];
+    const rankB = sizeOrder[valB.toUpperCase()];
+
+    if (rankA !== undefined && rankB !== undefined) {
+      return rankA - rankB;
+    } else if (rankA !== undefined) {
+      return -1;
+    } else if (rankB !== undefined) {
+      return 1;
+    }
+
+    if (!isNaN(numA)) return -1;
+    if (!isNaN(numB)) return 1;
+
+    return valA.localeCompare(valB, undefined, { numeric: true, sensitivity: "base" });
+  });
+};
+
 const filteredPacks = computed(() => {
   if (!product.value?.product_packs) return [];
-  if (!selectedUnit.value) return product.value.product_packs;
-  return product.value.product_packs.filter(
-    (pack: any) => pack.unit?.name === selectedUnit.value,
-  );
+  const rawPacks = !selectedUnit.value
+    ? product.value.product_packs
+    : product.value.product_packs.filter(
+        (pack: any) => pack.unit?.name === selectedUnit.value,
+      );
+  return sortPacksList(rawPacks);
 });
 
 // Initialization logic
@@ -518,7 +595,7 @@ const selectPack = (pack: any) => {
 
 // Price Logic (Correctly uses product_prices linked to active selectedPack)
 const priceInfo = computed(() => {
-  if (!product.value || !selectedPack.value) return { price: 0, offerPrice: 0 };
+  if (!product.value || !selectedPack.value) return { price: 0, offerPrice: 0, hasValidPrice: false };
 
   let selectedPackId = selectedPack.value.id;
   let priceObj = null;
@@ -533,30 +610,38 @@ const priceInfo = computed(() => {
     priceObj = product.value.product_prices[0];
   }
 
-  if (!priceObj) return { price: 0, offerPrice: 0 };
+  if (!priceObj) return { price: 0, offerPrice: 0, hasValidPrice: false };
 
   const isDistributor = authStore.activeRole === "Distributor";
-  let price = parseFloat(priceObj.price || "0");
-  let offerPrice = parseFloat(priceObj.offer_price || "0");
+  let price = 0;
+  let offerPrice = 0;
 
   if (isDistributor) {
-    const dPrice = parseFloat(priceObj.distributor_price || "0");
-    const dOffer = parseFloat(priceObj.distributor_offer_price || "0");
-    if (dPrice > 0) price = dPrice;
-    if (dOffer > 0) offerPrice = dOffer;
+    price = parseFloat(priceObj.distributor_price || "0");
+    offerPrice = parseFloat(priceObj.distributor_offer_price || "0");
+  } else {
+    price = parseFloat(priceObj.price || "0");
+    offerPrice = parseFloat(priceObj.offer_price || "0");
   }
 
-  return { price, offerPrice };
+  if (price <= 0) {
+    return { price: 0, offerPrice: 0, hasValidPrice: false };
+  }
+
+  const validOffer = offerPrice > 0 && offerPrice < price ? offerPrice : 0;
+  return { price, offerPrice: validOffer, hasValidPrice: true };
 });
 
 const displayPrice = computed(() => {
-  const { price, offerPrice } = priceInfo.value;
-  return offerPrice > 0 && offerPrice < price ? offerPrice : price;
+  const { price, offerPrice, hasValidPrice } = priceInfo.value;
+  if (!hasValidPrice) return 0;
+  return Math.round(offerPrice > 0 && offerPrice < price ? offerPrice : price);
 });
 
-const originalPrice = computed(() => priceInfo.value.price);
+const originalPrice = computed(() => Math.round(priceInfo.value.price));
 
 const discountPercent = computed(() => {
+  if (!priceInfo.value.hasValidPrice) return 0;
   const { price, offerPrice } = priceInfo.value;
   if (price > 0 && offerPrice > 0 && offerPrice < price) {
     return Math.round(((price - offerPrice) / price) * 100);
@@ -596,11 +681,6 @@ const relatedProducts = computed(() => productStore.categoryWiseProducts || []);
 
 // Initialization
 onMounted(async () => {
-  if (!authStore.isLoggedIn) {
-    router.push("/login");
-    return;
-  }
-  
   const id = route.params.id;
   if (id) {
     product.value = await productStore.fetchProduct(id as string);
@@ -646,6 +726,11 @@ const decrementQty = async () => {
 const modifyCart = async (isAdd: boolean) => {
   if (!authStore.isLoggedIn) {
     navigateToLogin();
+    return;
+  }
+
+  if (!priceInfo.value.hasValidPrice) {
+    showSnackbar("Price not available for your active role!");
     return;
   }
 

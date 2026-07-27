@@ -232,6 +232,10 @@ const selectedCategory = ref<number | null>(
   route.query.category ? parseInt(route.query.category.toString()) : null,
 );
 
+const selectedTag = ref<string | null>(
+  route.query.tag ? route.query.tag.toString() : null,
+);
+
 const priceMinInput = ref<number | ''>('');
 const priceMaxInput = ref<number | ''>('');
 const priceRange = ref([0, 999999]);
@@ -268,24 +272,39 @@ const filteredAndSortedProducts = computed(() => {
     list = list.filter((p) => p.category_id === selectedCategory.value);
   }
 
-  // 2. Filter by Price Range
+  // 2. Filter by Tag parameter
+  if (selectedTag.value) {
+    const tagQuery = selectedTag.value.toLowerCase().trim();
+    list = list.filter((p) => {
+      if (!p.tags || !Array.isArray(p.tags)) return false;
+      return p.tags.some((t: any) => 
+        t.id?.toString() === tagQuery || 
+        t.name?.toLowerCase() === tagQuery ||
+        t.name?.toLowerCase().includes(tagQuery)
+      );
+    });
+  }
+
+  // 3. Filter by Price Range
   const isDist = authStore.activeRole === "Distributor";
   list = list.filter((p) => {
     const { price } = productStore.getPrice(p, isDist);
     return price >= priceRange.value[0] && price <= priceRange.value[1];
   });
 
-  // 3. Filter by Search Query
+  // 4. Filter by Search Query (Product Name, Description, Category, or Tags)
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase().trim();
-    list = list.filter(
-      (p) =>
-        p.name?.toLowerCase().includes(query) ||
-        p.description?.toLowerCase().includes(query)
-    );
+    list = list.filter((p) => {
+      const matchName = p.name?.toLowerCase().includes(query);
+      const matchDesc = p.description?.toLowerCase().includes(query);
+      const matchCat = p.category?.name?.toLowerCase().includes(query);
+      const matchTags = Array.isArray(p.tags) && p.tags.some((t: any) => t.name?.toLowerCase().includes(query));
+      return matchName || matchDesc || matchCat || matchTags;
+    });
   }
 
-  // 4. Sort
+  // 5. Sort
   list.sort((a, b) => {
     if (sortBy.value === "newest") {
       return b.id - a.id;
@@ -359,6 +378,7 @@ const fetchCategories = async () => {
 
 const clearFilters = () => {
   selectedCategory.value = null;
+  selectedTag.value = null;
   priceMinInput.value = '';
   priceMaxInput.value = '';
   priceRange.value = [0, 999999];
@@ -366,8 +386,17 @@ const clearFilters = () => {
   currentPage.value = 1;
 };
 
-watch([selectedCategory, sortBy, priceRange, searchQuery], () => {
+watch([selectedCategory, selectedTag, sortBy, priceRange, searchQuery], () => {
   currentPage.value = 1;
+});
+
+watch(() => route.query, (newQuery) => {
+  if (newQuery.category) {
+    selectedCategory.value = parseInt(newQuery.category.toString());
+  }
+  if (newQuery.tag) {
+    selectedTag.value = newQuery.tag.toString();
+  }
 });
 
 onMounted(() => {

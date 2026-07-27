@@ -106,17 +106,22 @@ export const useCartStore = defineStore('cart', {
             }
             if (priceObj) {
               const isDistributor = authStore.activeRole === 'Distributor'
-              let priceVal = parseFloat(priceObj.price || '0')
-              let offerVal = parseFloat(priceObj.offer_price || '0')
+              let priceVal = 0
+              let offerVal = 0
               
               if (isDistributor) {
-                const dPrice = parseFloat(priceObj.distributor_price || '0')
-                const dOffer = parseFloat(priceObj.distributor_offer_price || '0')
-                if (dPrice > 0) priceVal = dPrice
-                if (dOffer > 0) offerVal = dOffer
+                priceVal = parseFloat(priceObj.distributor_price || '0')
+                offerVal = parseFloat(priceObj.distributor_offer_price || '0')
+              } else {
+                priceVal = parseFloat(priceObj.price || '0')
+                offerVal = parseFloat(priceObj.offer_price || '0')
               }
               
-              resolvedPrice = offerVal > 0 && offerVal < priceVal ? offerVal : priceVal
+              if (priceVal > 0) {
+                resolvedPrice = offerVal > 0 && offerVal < priceVal ? offerVal : priceVal
+              } else {
+                resolvedPrice = 0
+              }
             }
           }
 

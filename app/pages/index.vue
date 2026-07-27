@@ -145,25 +145,155 @@
         </v-slide-group>
       </section>
 
-      <!-- 6. Standard Elegant Grid (Discover More) -->
-      <section class="products-section py-16" v-if="productStore.randomProducts.length > 0">
-        <div class="d-flex flex-column align-center text-center mb-12 px-4">
-          <span class="elegant-eyebrow mb-2">FOR YOU</span>
-          <h2 class="section-heading">Discover More</h2>
-        </div>
-        
-        <div class="container mx-auto px-4 px-md-8" style="max-width: 1400px;">
-          <div class="v-row">
-            <div
-              v-for="product in productStore.randomProducts.slice(0, 4)"
-              :key="product.id"
-              class="v-col-12 v-col-sm-6 v-col-md-3 mb-8"
-            >
-              <product-card :product="product" class="h-100 elegant-product-card" />
+      <!-- Tag-wise Products Sections -->
+      <section v-if="productStore.tags && productStore.tags.length > 0" class="tags-master-wrapper py-16">
+        <div class="px-4 px-md-12 mb-12" style="max-width: 1600px; margin: 0 auto;">
+          <!-- Master Header -->
+          <div class="d-flex flex-column align-center text-center mb-10">
+            <div class="tag-master-badge mb-3 px-4 py-1 rounded-pill d-inline-flex align-center ga-2">
+              <v-icon size="14" color="#C5A850">mdi-rhombus-split-outline</v-icon>
+              <span class="text-caption font-weight-bold tracking-widest" style="color: #C5A850;">CURATED EDITIONS</span>
+            </div>
+            <h2 class="section-heading text-h3 font-weight-light mb-3" style="font-family: 'Cormorant Garamond', serif !important;">
+              Shop By Signature Tag
+            </h2>
+            <p class="text-grey-darken-1 text-subtitle-1 mb-8" style="max-width: 540px; font-weight: 300;">
+              Hand-selected curations categorised by style, occasion, and seasonal trends.
+            </p>
+
+            <!-- Quick Tag Navigation Bar -->
+            <div class="d-flex ga-2 overflow-x-auto py-2 px-3 bg-white rounded-pill border shadow-sm ga-2" style="max-width: 100%; scrollbar-width: none;">
+              <v-btn
+                variant="text"
+                rounded="pill"
+                size="small"
+                :class="['tag-nav-btn', activeTagId === null ? 'is-active-tag-btn' : '']"
+                @click="activeTagId = null"
+              >
+                All Collections
+              </v-btn>
+              <v-btn
+                v-for="tag in availableTags"
+                :key="tag.id"
+                variant="text"
+                rounded="pill"
+                size="small"
+                :class="['tag-nav-btn', activeTagId === tag.id ? 'is-active-tag-btn' : '']"
+                @click="activeTagId = tag.id"
+              >
+                {{ tag.name }}
+              </v-btn>
             </div>
           </div>
-          <div class="text-center mt-8">
-            <NuxtLink to="/products" class="elegant-btn-outline">VIEW ENTIRE COLLECTION</NuxtLink>
+
+          <!-- Tag Sections List -->
+          <div class="tag-sections-container d-flex flex-column ga-12">
+            <div
+              v-for="(tag, index) in filteredTags"
+              :key="tag.id"
+              class="tag-luxury-card pa-6 pa-md-10 rounded-32 position-relative"
+            >
+              <!-- Card Top Bar -->
+              <div class="d-flex justify-space-between align-center flex-wrap ga-4 mb-8">
+                <div class="d-flex align-center ga-3">
+                  <div class="tag-number-emblem">
+                    0{{ index + 1 }}
+                  </div>
+                  <div>
+                    <div class="d-flex align-center ga-2 mb-1">
+                      <span class="text-caption font-weight-bold tracking-widest text-uppercase text-grey-darken-1">TAGGED EDITION</span>
+                      <span class="tag-dot-sep">•</span>
+                      <span class="text-caption font-weight-bold text-primary">{{ tag.products?.length || 0 }} PIECES</span>
+                    </div>
+                    <h3 class="tag-title text-h4 font-weight-bold mb-0">
+                      {{ tag.name }}
+                    </h3>
+                  </div>
+                </div>
+
+                <NuxtLink :to="`/products?tag=${tag.id}`" class="tag-explore-btn d-inline-flex align-center ga-2">
+                  <span>EXPLORE {{ tag.name.toUpperCase() }}</span>
+                  <v-icon size="16">mdi-arrow-right</v-icon>
+                </NuxtLink>
+              </div>
+
+              <!-- Product Carousel -->
+              <v-slide-group
+                class="px-0"
+                show-arrows
+              >
+                <v-slide-group-item
+                  v-for="product in tag.products"
+                  :key="product.id"
+                >
+                  <div class="product-carousel-card mx-2 mx-md-3">
+                    <product-card :product="product" class="h-100 elegant-product-card" />
+                  </div>
+                </v-slide-group-item>
+              </v-slide-group>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Discover More Section -->
+      <section class="discover-more-section py-20 position-relative" v-if="productStore.randomProducts.length > 0">
+        <div class="container mx-auto px-4 px-md-8" style="max-width: 1400px;">
+          <!-- Discover Header -->
+          <div class="d-flex flex-column align-center text-center mb-12">
+            <div class="discover-badge mb-3 px-4 py-1 rounded-pill d-inline-flex align-center ga-2">
+              <v-icon size="16" color="#C5A850">mdi-sparkles</v-icon>
+              <span class="text-caption font-weight-bold tracking-wider" style="color: #C5A850;">HANDPICKED FOR YOU</span>
+            </div>
+            <h2 class="section-heading text-h3 font-weight-light mb-3">Discover More Exquisite Pieces</h2>
+            <p class="text-grey-darken-1 text-subtitle-1" style="max-width: 540px; font-weight: 300;">
+              Curated additions to match your personal aesthetic and elevate your wardrobe.
+            </p>
+
+            <!-- Quick Filter Tabs -->
+            <div class="d-flex ga-2 mt-6 p-1 bg-white rounded-pill border elevation-1">
+              <v-btn
+                v-for="tab in discoverTabs"
+                :key="tab.value"
+                variant="text"
+                rounded="pill"
+                size="small"
+                :class="['discover-tab-btn', activeDiscoverTab === tab.value ? 'is-active-tab' : '']"
+                @click="activeDiscoverTab = tab.value"
+              >
+                {{ tab.label }}
+              </v-btn>
+            </div>
+          </div>
+          
+          <!-- Discover Product Grid -->
+          <v-row class="ga-y-6">
+            <v-col
+              v-for="product in displayDiscoverProducts"
+              :key="product.id"
+              cols="12"
+              sm="6"
+              md="3"
+            >
+              <div class="discover-card-wrapper h-100">
+                <product-card :product="product" class="h-100 elegant-product-card" />
+              </div>
+            </v-col>
+          </v-row>
+
+          <!-- Call to Action Banner Card -->
+          <div class="discover-cta-banner mt-16 mb-12 mb-md-16 pa-8 pa-md-12 rounded-32 text-center position-relative overflow-hidden">
+            <div class="cta-gradient-overlay"></div>
+            <div class="position-relative z-1">
+              <span class="text-caption text-uppercase font-weight-bold tracking-widest text-gold-light mb-2 d-block">EXPLORE THE FULL CATALOG</span>
+              <h3 class="text-h4 text-white font-weight-light mb-4">Looking for something specific?</h3>
+              <p class="text-grey-lighten-2 mb-8 mx-auto" style="max-width: 600px; font-size: 1.05rem;">
+                Explore our full collection with filtering by size, color, category, and price range.
+              </p>
+              <NuxtLink to="/products" class="gold-cta-btn">
+                EXPLORE ALL PRODUCTS <v-icon size="18" class="ms-2">mdi-arrow-right</v-icon>
+              </NuxtLink>
+            </div>
           </div>
         </div>
       </section>
@@ -183,6 +313,44 @@ const config = useRuntimeConfig();
 
 const loading = ref(true);
 const activeCategoryIndex = ref(0);
+
+const activeTagId = ref<number | null>(null);
+
+const availableTags = computed(() => {
+  if (!productStore.tags) return [];
+  return productStore.tags.filter(t => t.products && t.products.length > 0);
+});
+
+const filteredTags = computed(() => {
+  if (!productStore.tags) return [];
+  const withProducts = productStore.tags.filter(t => t.products && t.products.length > 0);
+  if (activeTagId.value !== null) {
+    return withProducts.filter(t => t.id === activeTagId.value);
+  }
+  return withProducts;
+});
+
+const activeDiscoverTab = ref("all");
+
+const discoverTabs = [
+  { label: "All Picks", value: "all" },
+  { label: "Top Rated", value: "top_rated" },
+  { label: "Best Value", value: "best_value" },
+];
+
+const displayDiscoverProducts = computed(() => {
+  let list = [...(productStore.randomProducts || [])];
+  if (activeDiscoverTab.value === "top_rated") {
+    list.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+  } else if (activeDiscoverTab.value === "best_value") {
+    list.sort((a, b) => {
+      const priceA = a.product_prices?.[0]?.offer_price || a.product_prices?.[0]?.price || 0;
+      const priceB = b.product_prices?.[0]?.offer_price || b.product_prices?.[0]?.price || 0;
+      return priceA - priceB;
+    });
+  }
+  return list.slice(0, 8);
+});
 
 const bannerPaths = [
   "banner_path_1",
@@ -214,6 +382,7 @@ onMounted(async () => {
     productStore.fetchBanners(),
     productStore.fetchNewArrivals(),
     productStore.fetchRandomProducts(),
+    productStore.fetchTags(),
   ]);
   loading.value = false;
 });
@@ -473,5 +642,160 @@ onMounted(async () => {
   width: 300px;
 }
 
+/* Refined Tag-Wise Products Styling */
+.tags-master-wrapper {
+  background-color: #FDFBF7;
+}
 
+.tag-master-badge {
+  background: rgba(197, 168, 80, 0.08);
+  border: 1px solid rgba(197, 168, 80, 0.2);
+}
+
+.tag-nav-btn {
+  font-weight: 600 !important;
+  color: #666666 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  padding: 0 18px !important;
+  height: 36px !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.tag-nav-btn.is-active-tag-btn, .tag-nav-btn:hover {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.tag-luxury-card {
+  background: linear-gradient(145deg, #FFFFFF 0%, #FAF6EF 100%);
+  border: 1px solid rgba(197, 168, 80, 0.2);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.03);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.tag-luxury-card:hover {
+  border-color: rgba(197, 168, 80, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
+}
+
+.tag-number-emblem {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(197, 168, 80, 0.1);
+  border: 1px solid rgba(197, 168, 80, 0.25);
+  color: #C5A850;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.tag-dot-sep {
+  color: #C5A850;
+  font-size: 0.8rem;
+}
+
+.tag-title {
+  color: #1A1A1A;
+  font-family: 'Urbanist', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.tag-explore-btn {
+  background: #1A1A1A;
+  color: #FFFFFF !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  padding: 12px 24px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tag-explore-btn:hover {
+  background: #C5A850;
+  color: #1A1A1A !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(197, 168, 80, 0.3);
+}
+
+/* Discover More Styling */
+.discover-more-section {
+  background-color: #FDFBF7;
+  padding-bottom: 6rem;
+}
+
+.discover-badge {
+  background: rgba(197, 168, 80, 0.1);
+  border: 1px solid rgba(197, 168, 80, 0.25);
+}
+
+.discover-tab-btn {
+  font-weight: 600 !important;
+  color: #666666 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.discover-tab-btn.is-active-tab {
+  background-color: #222222 !important;
+  color: #FFFFFF !important;
+}
+
+.discover-card-wrapper {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.discover-card-wrapper:hover {
+  transform: translateY(-8px);
+}
+
+.discover-cta-banner {
+  background-color: #161616;
+  border-radius: 32px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+  margin-bottom: 3rem;
+}
+
+.cta-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(197, 168, 80, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+}
+
+.text-gold-light {
+  color: #EED056;
+}
+
+.gold-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #C5A850 0%, #EED056 100%);
+  color: #111111 !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  padding: 16px 36px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 25px rgba(197, 168, 80, 0.3);
+}
+
+.gold-cta-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(197, 168, 80, 0.45);
+}
 </style>

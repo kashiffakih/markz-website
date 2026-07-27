@@ -21,39 +21,52 @@
             </div>
             <div class="flex-grow-1">
               <h3 class="text-h6 font-weight-bold text-secondary mb-1" style="font-family: 'Urbanist', sans-serif !important;">Email</h3>
-              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif;">{{ email || 'No email available' }}</p>
+              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif;">{{ email }}</p>
             </div>
             <v-icon icon="mdi-chevron-right" color="accent" size="20"></v-icon>
           </div>
         </a>
 
         <!-- WhatsApp -->
-        <a :href="`https://wa.me/${phone}`" target="_blank" class="contact-item text-decoration-none">
+        <a :href="`https://wa.me/${cleanPhone}`" target="_blank" class="contact-item text-decoration-none">
           <div class="d-flex align-center w-100">
             <div class="icon-wrapper mr-4">
               <v-icon icon="mdi-whatsapp" color="accent" size="24"></v-icon>
             </div>
             <div class="flex-grow-1">
               <h3 class="text-h6 font-weight-bold text-secondary mb-1" style="font-family: 'Urbanist', sans-serif !important;">WhatsApp</h3>
-              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif;">{{ phone ? '+' + phone : 'No phone number available' }}</p>
+              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif;">{{ displayPhone }}</p>
             </div>
             <v-icon icon="mdi-chevron-right" color="accent" size="20"></v-icon>
           </div>
         </a>
 
         <!-- Call Us -->
-        <a :href="`tel:+${phone}`" class="contact-item text-decoration-none">
+        <a :href="`tel:${cleanPhone}`" class="contact-item text-decoration-none">
           <div class="d-flex align-center w-100">
             <div class="icon-wrapper mr-4">
               <v-icon icon="mdi-phone" color="accent" size="24"></v-icon>
             </div>
             <div class="flex-grow-1">
               <h3 class="text-h6 font-weight-bold text-secondary mb-1" style="font-family: 'Urbanist', sans-serif !important;">Call Us</h3>
-              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif;">{{ phone ? '+' + phone : 'No phone number available' }}</p>
+              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif;">{{ displayPhone }}</p>
             </div>
             <v-icon icon="mdi-chevron-right" color="accent" size="20"></v-icon>
           </div>
         </a>
+
+        <!-- Address Card -->
+        <div v-if="address" class="contact-item">
+          <div class="d-flex align-start w-100">
+            <div class="icon-wrapper mr-4 mt-1">
+              <v-icon icon="mdi-map-marker" color="accent" size="24"></v-icon>
+            </div>
+            <div class="flex-grow-1">
+              <h3 class="text-h6 font-weight-bold text-secondary mb-1" style="font-family: 'Urbanist', sans-serif !important;">Our Address</h3>
+              <p class="text-body-2 font-weight-medium text-grey-darken-1 mb-0" style="font-family: 'Urbanist', sans-serif; line-height: 1.5;">{{ address }}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </v-container>
   </div>
@@ -73,8 +86,26 @@ onMounted(async () => {
   loading.value = false;
 });
 
-const email = computed(() => productStore.banners?.email || '');
-const phone = computed(() => productStore.banners?.phone || '');
+const email = computed(() => productStore.banners?.email || 'adaab.treder@gmail.com');
+const rawPhone = computed(() => productStore.banners?.phone || '8600175751');
+
+const displayPhone = computed(() => {
+  const p = rawPhone.value ? rawPhone.value.toString() : '';
+  if (!p) return '+91 86001 75751';
+  return p.startsWith('+') ? p : '+91 ' + p;
+});
+
+const cleanPhone = computed(() => {
+  const p = rawPhone.value ? rawPhone.value.toString().replace(/[^0-9]/g, '') : '';
+  if (!p) return '918600175751';
+  return p.startsWith('91') ? p : '91' + p;
+});
+
+const address = computed(() => {
+  return productStore.banners?.contact || 
+         productStore.banners?.address || 
+         'RAZA TRADING CO - H.No 607 Khadan Road, Laxmi Sizing, Near Prime Hospital, Kalyan Road, Bhiwandi, Dist Thane, MH - 421302';
+});
 
 useHead({
   title: 'Contact Us - Aadab',

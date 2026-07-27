@@ -150,7 +150,7 @@
         </v-col>
 
         <!-- Distributor Fields -->
-        <template v-if="authStore.isDistributor">
+        <template v-if="isDistributor">
           <v-col cols="12">
             <v-divider class="my-4" />
             <h3 class="text-h6 mb-4">Business Details</h3>
@@ -171,6 +171,54 @@
               variant="plain"
               append-inner-icon="mdi-lock"
             />
+          </v-col>
+
+          <!-- Visiting Card Section for Distributor -->
+          <v-col cols="12">
+            <v-card class="pa-4 border-thin mt-2" elevation="0" rounded="lg" color="grey-lighten-5">
+              <div class="d-flex justify-space-between align-center mb-3">
+                <div class="d-flex align-center">
+                  <v-avatar color="primary" size="36" class="mr-3">
+                    <v-icon color="white" size="20">mdi-card-account-details-outline</v-icon>
+                  </v-avatar>
+                  <div>
+                    <h4 class="text-subtitle-1 font-weight-bold">Visiting Card</h4>
+                    <p class="text-caption text-grey">Business Visiting Card Image</p>
+                  </div>
+                </div>
+                <v-btn
+                  size="small"
+                  color="primary"
+                  variant="flat"
+                  :loading="uploadingVisitingCard"
+                  @click="triggerVisitingCardUpload"
+                >
+                  <v-icon start size="18">mdi-upload</v-icon>
+                  {{ visitingCardUrl ? 'Change Card' : 'Upload Card' }}
+                </v-btn>
+              </div>
+
+              <input
+                ref="visitingCardInput"
+                type="file"
+                accept="image/*"
+                class="d-none"
+                @change="handleVisitingCardUpload"
+              />
+
+              <div v-if="visitingCardUrl" class="text-center pa-2 bg-white rounded-lg border">
+                <v-img
+                  :src="visitingCardUrl"
+                  max-height="220"
+                  contain
+                  class="rounded-lg"
+                />
+              </div>
+              <div v-else class="text-center py-6 border-dashed rounded-lg bg-white">
+                <v-icon size="40" color="grey-lighten-1">mdi-image-plus</v-icon>
+                <p class="text-caption text-grey mt-2">No visiting card uploaded yet</p>
+              </div>
+            </v-card>
           </v-col>
         </template>
       </v-row>
@@ -271,18 +319,30 @@ const switchingRole = ref(false);
 const uploadingPhoto = ref(false);
 const photoInput = ref<HTMLInputElement | null>(null);
 
+const uploadingVisitingCard = ref(false);
+const visitingCardInput = ref<HTMLInputElement | null>(null);
+
 const showReferralDialog = ref(false);
 const referralCodeInput = ref("");
 const redeemingReferral = ref(false);
 
-const isDistributor = computed(() => authStore.isDistributor);
 const hasDistributorRole = computed(
   () => authStore.user?.roles?.some((r) => r.name === "Distributor") ?? false,
+);
+const isDistributor = computed(
+  () => authStore.isDistributor || hasDistributorRole.value || (authStore.user as any)?.active_role === "Distributor"
 );
 const isDistributorModel = ref(authStore.isDistributor);
 
 const userAvatarUrl = computed(() => {
   const path = authStore.user?.imagepath;
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return `${config.public.mediaBase}${path}`;
+});
+
+const visitingCardUrl = computed(() => {
+  const path = (authStore.user as any)?.visiting_card_path || (authStore.user as any)?.visitingCardPath;
   if (!path) return null;
   if (path.startsWith("http")) return path;
   return `${config.public.mediaBase}${path}`;
@@ -370,6 +430,38 @@ const handlePhotoUpload = async (event: Event) => {
     showSnackbar(e.message || "Failed to upload image", "error");
   } finally {
     uploadingPhoto.value = false;
+  }
+};
+
+const triggerVisitingCardUpload = () => {
+  visitingCardInput.value?.click();
+};
+
+const handleVisitingCardUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+
+  const file = target.files[0];
+  uploadingVisitingCard.value = true;
+  const api = useApi();
+
+  const formData = new FormData();
+  formData.append("user_id", authStore.user?.id?.toString() || "");
+  formData.append("visiting_card", file);
+
+  try {
+    const response: any = await api.post("/upload_wholesaler_documents", formData);
+    if (response.success) {
+      showSnackbar("Visiting card uploaded successfully!", "success");
+      await authStore.fetchUser();
+    } else {
+      showSnackbar(response.message || "Failed to upload visiting card.", "error");
+    }
+  } catch (e: any) {
+    console.error("Visiting card upload error:", e);
+    showSnackbar(e.message || "Failed to upload visiting card", "error");
+  } finally {
+    uploadingVisitingCard.value = false;
   }
 };
 
