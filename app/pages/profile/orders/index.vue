@@ -82,18 +82,42 @@
               </div>
             </div>
 
-            <v-btn
-              variant="text"
-              color="primary"
-              append-icon="mdi-chevron-right"
-              :to="`/profile/orders/${order.id}`"
-            >
-              View Details
-            </v-btn>
+            <div class="d-flex align-center ga-2">
+              <v-chip
+                v-if="returnOf(order)"
+                size="small"
+                label
+                :color="returnColor(returnOf(order).status)"
+                prepend-icon="mdi-undo-variant"
+              >
+                Return: {{ returnText(returnOf(order).status) }}
+              </v-chip>
+              <v-btn
+                v-else-if="canReturn(order)"
+                variant="tonal"
+                color="primary"
+                size="small"
+                prepend-icon="mdi-undo-variant"
+                @click="startReturn(order)"
+              >
+                Return
+              </v-btn>
+              <v-btn
+                variant="text"
+                color="primary"
+                append-icon="mdi-chevron-right"
+                :to="`/profile/orders/${order.id}`"
+              >
+                View Details
+              </v-btn>
+            </div>
           </div>
         </v-card-text>
       </v-card>
     </div>
+
+    <MarketReturnDialog v-model="returnOpen" :order="returnOrder" @done="onReturned" />
+    <v-snackbar v-model="toast" color="success" timeout="3500">Return request bhej di gayi. Status yahin dikhega.</v-snackbar>
   </div>
 </template>
 
@@ -173,6 +197,53 @@ const mapOrderDetailsToItems = (ordersList: any[]) => {
   });
 };
 
+// ---------- returns ----------
+const { policy, load: loadPolicy } = usePolicy();
+const myReturns = ref<any[]>([]);
+const returnOpen = ref(false);
+const returnOrder = ref<any>(null);
+const toast = ref(false);
+
+const returnOf = (order: any) =>
+  myReturns.value.find((r: any) => Number(r.order_id) === Number(order.id) && r.status !== "rejected");
+
+const canReturn = (order: any) => {
+  if (!order.is_delivered || !policy.value) return false;
+  const days = Number(policy.value.return_window_days || 0);
+  if (days <= 0) return false;
+  const base = new Date(order.updated_at || order.created_at).getTime();
+  return Date.now() <= base + days * 86400000;
+};
+
+const returnText = (s: string) =>
+  ({
+    requested: "Review me",
+    approved: "Approved",
+    pickup_scheduled: "Pickup tay",
+    picked_up: "Pickup ho gaya",
+    received: "Seller ko mila",
+    refunded: "Refund ho gaya",
+  } as Record<string, string>)[s] || s;
+
+const returnColor = (s: string) => (s === "refunded" ? "success" : s === "requested" ? "warning" : "info");
+
+const startReturn = (order: any) => {
+  returnOrder.value = order;
+  returnOpen.value = true;
+};
+
+const loadReturns = async () => {
+  const r: any = await useApi().get("/my_returns");
+  myReturns.value = Array.isArray(r?.data) ? r.data : [];
+};
+
+const onReturned = () => {
+  toast.value = true;
+  loadReturns();
+};
+
+onMounted(loadPolicy);
+
 const fetchOrders = async () => {
   loading.value = true;
   const api = useApi();
@@ -181,6 +252,7 @@ const fetchOrders = async () => {
   if (response.success && response.data) {
     orders.value = mapOrderDetailsToItems(response.data);
   }
+  await loadReturns();
 
   loading.value = false;
 };

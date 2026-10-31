@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     'vuetify/styles',
     '@mdi/font/css/materialdesignicons.css',
     fileURLToPath(new URL('./app/assets/css/main.css', import.meta.url)),
+    fileURLToPath(new URL('./app/assets/css/market.css', import.meta.url)),
   ],
   
   // Build configuration

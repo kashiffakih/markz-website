@@ -786,6 +786,8 @@ import { useRoute, useRouter } from "vue-router";
 import { useWalletStore } from "~/stores/wallet";
 
 const authStore = useAuthStore();
+const { load: loadPolicy, deliveryFor } = usePolicy();
+onMounted(loadPolicy);
 const cartStore = useCartStore();
 const router = useRouter();
 const route = useRoute();
@@ -836,7 +838,7 @@ const parseAmount = (val: any) => parseFloat((val || 0).toString());
 const companyFees = computed(() => {
   const company = authStore.user?.companies?.[0];
   return {
-    deliveryCharges: parseAmount(company?.deliveryCharges || 0),
+    deliveryCharges: deliveryFor(cartStore.selectedTotalAmount, parseAmount(company?.deliveryCharges || 0)),
     packagingCharges: parseAmount(company?.packagingCharges || 0),
     platformFee: parseAmount(company?.platformFee || 0),
   };
@@ -1211,12 +1213,28 @@ const placeOrder = async () => {
         localStorage.removeItem("checkout_payment_method");
       }
 
-      const orderId = response.data?.id || response.id;
+      // the server decides the final amount (prices, delivery, coupon, wallet): always use ITS numbers
+      const placed: any[] = response.orders?.length
+        ? response.orders
+        : response.data
+          ? [response.data]
+          : [];
+      const orderId = placed[0]?.id || response.id;
+      const payable = placed.reduce(
+        (sum: number, o: any) => sum + parseAmount(o.total_amount),
+        0,
+      );
       if (paymentMethod.value === "PhonePe") {
         showSnackbar("Redirecting to PhonePe...", "info");
         router.push({
           path: "/payment/processing",
-          query: { orderId: orderId, amount: finalTotalAmount.toFixed(2) },
+          query: {
+            orderId: orderId,
+            amount: payable.toFixed(2),
+            orders: placed
+              .map((o: any) => `${o.id}:${parseAmount(o.total_amount).toFixed(2)}`)
+              .join(","),
+          },
         });
       } else {
         showSnackbar("Order placed successfully!", "success");

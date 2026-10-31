@@ -1,4 +1,4 @@
-// API Service for Aadab Website
+// API Service for Markz Website
 // Connects to the existing Laravel API
 
 export const useApi = () => {
@@ -8,7 +8,7 @@ export const useApi = () => {
   // Get auth token from localStorage
   const getAuthHeaders = () => {
     const headers: Record<string, string> = {
-      'company-id': '1', // Default company ID for Aadab
+      'company-id': '1', // Default company ID (company 1 = Aadab, the owner's own store)
     }
     
     if (typeof window === 'undefined') return headers

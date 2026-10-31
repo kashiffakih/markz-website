@@ -4,12 +4,17 @@
     <v-navigation-drawer v-model="drawer" temporary location="left">
       <v-list>
         <v-list-item to="/" title="Home" prepend-icon="mdi-home" />
-        <v-list-item
-          to="/products"
-          title="Products"
-          prepend-icon="mdi-shopping"
-        />
+        <v-list-item to="/shop" title="Shop All" prepend-icon="mdi-shopping" />
+        <v-list-item to="/categories" title="Categories" prepend-icon="mdi-view-grid-outline" />
+        <v-list-item to="/sellers" title="Sellers" prepend-icon="mdi-storefront-outline" />
+        <v-list-item to="/sellers/1" title="Aadab Store (seller)" prepend-icon="mdi-hanger" />
         <v-list-item to="/cart" title="Cart" prepend-icon="mdi-cart" />
+        <v-divider />
+        <v-list-item to="/sell" title="Sell on Markz" prepend-icon="mdi-store-plus-outline" />
+        <v-list-item to="/reseller" title="Reseller Program" prepend-icon="mdi-account-cash-outline" />
+        <v-list-item to="/about" title="About" prepend-icon="mdi-information-outline" />
+        <v-list-item to="/faq" title="FAQs" prepend-icon="mdi-help-circle-outline" />
+        <v-list-item to="/contact" title="Contact" prepend-icon="mdi-phone-outline" />
         <v-divider />
         <ClientOnly>
           <template v-slot:placeholder>
@@ -86,6 +91,9 @@
 
     <!-- Footer -->
     <LayoutAppFooter />
+
+    <!-- Mobile bottom navigation (hidden on desktop) -->
+    <LayoutMobileBottomNav />
 
     <!-- Global Snackbar for notifications -->
     <v-snackbar

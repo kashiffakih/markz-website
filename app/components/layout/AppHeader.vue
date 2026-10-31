@@ -43,16 +43,17 @@
           
           <!-- Desktop Navigation -->
           <nav class="d-none d-md-flex align-center ga-6">
-            <NuxtLink to="/" class="nav-link">Home</NuxtLink>
-            <NuxtLink to="/products" class="nav-link">Products</NuxtLink>
-            <NuxtLink to="/contact" class="nav-link">Contact</NuxtLink>
+            <NuxtLink to="/shop" class="nav-link">Shop</NuxtLink>
+            <NuxtLink to="/categories" class="nav-link">Categories</NuxtLink>
+            <NuxtLink to="/sellers" class="nav-link">Sellers</NuxtLink>
+            <NuxtLink to="/sell" class="nav-link">Sell</NuxtLink>
           </nav>
         </div>
 
         <!-- Center: Logo -->
         <div class="logo-container">
           <NuxtLink to="/" class="text-decoration-none">
-            <span class="logo-text">Aadab<span class="text-primary">.</span></span>
+            <span class="logo-text">Markz<span class="text-primary">.</span></span>
           </NuxtLink>
         </div>
 
@@ -61,8 +62,8 @@
           <!-- Desktop Search -->
           <v-card
             elevation="0"
-            class="search-card d-none d-md-flex mr-2"
-            style="width: 200px;"
+            class="search-card d-none d-lg-flex mr-2"
+            style="width: 240px;"
           >
             <v-text-field
               v-model="searchQuery"
@@ -80,7 +81,7 @@
           <v-btn
             icon
             variant="text"
-            class="d-md-none"
+            class="d-lg-none"
             @click="showMobileSearch = !showMobileSearch"
           >
             <v-icon>mdi-magnify</v-icon>
@@ -183,7 +184,7 @@
       <v-expand-transition>
         <div
           v-if="showMobileSearch"
-          class="d-md-none w-100 py-2 px-4 bg-white border-bottom"
+          class="d-lg-none w-100 py-2 px-4 bg-white border-bottom"
         >
           <v-text-field
             v-model="searchQuery"
@@ -256,7 +257,7 @@ const cartCount = computed(() => cartStore.itemCount);
 // Methods
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push(`/products?search=${encodeURIComponent(searchQuery.value)}`);
+    router.push(`/shop?search=${encodeURIComponent(searchQuery.value)}`);
     showMobileSearch.value = false;
   }
 };
@@ -305,7 +306,7 @@ defineEmits(["toggle-drawer"]);
   font-family: "Urbanist", sans-serif;
   font-weight: 700;
   font-size: 0.825rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 2px;
   position: relative;
@@ -365,7 +366,7 @@ defineEmits(["toggle-drawer"]);
 .search-card:hover,
 .search-card:focus-within {
   border-color: var(--accent) !important;
-  box-shadow: 0 4px 12px rgba(229, 94, 94, 0.08) !important;
+  box-shadow: 0 4px 12px rgba(11, 93, 59, 0.12) !important;
 }
 
 .search-input :deep(.v-field__input) {

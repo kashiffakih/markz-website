@@ -7,7 +7,7 @@
     <v-card class="pa-8 pa-md-12" rounded="xl" elevation="2">
       <div class="content-text">
         <p class="text-subtitle-1 mb-6">
-          Welcome to <strong>Aadab (RAZA TRADING CO)</strong>! These Terms & Conditions govern your use of our clothing online store and the purchase of our products. By using our services, you agree to these terms.
+          Welcome to <strong>Markz</strong>! These Terms & Conditions govern your use of our clothing online store and the purchase of our products. By using our services, you agree to these terms.
         </p>
 
         <h2 class="text-h5 font-weight-bold mb-4">1. ACCEPTANCE OF TERMS</h2>
@@ -57,7 +57,7 @@
 
         <h2 class="text-h5 font-weight-bold mb-4">7. INTELLECTUAL PROPERTY</h2>
         <p class="mb-6">
-          All content, trademarks, logos, and intellectual property on this site are owned by <strong>Aadab (RAZA TRADING CO)</strong>. You may not reproduce, distribute, or create derivative works without explicit written permission.
+          All content, trademarks, logos, and intellectual property on this site are owned by <strong>Markz</strong>. You may not reproduce, distribute, or create derivative works without explicit written permission.
         </p>
 
         <h2 class="text-h5 font-weight-bold mb-4">8. LIABILITY LIMITATION</h2>

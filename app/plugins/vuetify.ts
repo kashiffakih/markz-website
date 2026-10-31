@@ -9,14 +9,14 @@ export default defineNuxtPlugin((app) => {
     components,
     directives,
     theme: {
-      defaultTheme: 'aadabTheme',
+      defaultTheme: 'markzTheme',
       themes: {
-        aadabTheme: {
+        markzTheme: {
           dark: false,
           colors: {
-            primary: '#E55E5E',      // Coral Red / Salmon Accent
-            secondary: '#000000',    // Pure Black
-            accent: '#E55E5E',       // Coral Red / Salmon Accent
+            primary: '#0B5D3B',      // Markz emerald
+            secondary: '#14201A',    // Deep green-black
+            accent: '#C99A2E',       // Markz gold
             background: '#ffffff',   // Pure White
             surface: '#ffffff',
             error: '#d32f2f',

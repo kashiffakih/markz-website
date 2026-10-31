@@ -93,7 +93,7 @@ const fetchNotifications = async () => {
       // Fallback data for demo if API empty
       /*
       notifications.value = [
-        { id: 1, title: 'Welcome to Aadab', message: 'Thanks for joining us!', created_at: new Date().toISOString(), read: false },
+        { id: 1, title: 'Welcome to Markz', message: 'Thanks for joining us!', created_at: new Date().toISOString(), read: false },
         { id: 2, title: 'Order Shipped', message: 'Your order #1234 has been shipped.', created_at: new Date().toISOString(), read: true }
       ]
       */

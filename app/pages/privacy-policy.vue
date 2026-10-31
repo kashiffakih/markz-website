@@ -7,7 +7,7 @@
     <v-card class="pa-8 pa-md-12" rounded="xl" elevation="2">
       <div class="content-text">
         <p class="text-subtitle-1 mb-6">
-          At <strong>Aadab (RAZA TRADING CO)</strong>, we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our online clothing store and mobile application.
+          At <strong>Markz</strong>, we respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our online clothing store and mobile application.
         </p>
 
         <h2 class="text-h5 font-weight-bold mb-4">1. INFORMATION WE COLLECT</h2>

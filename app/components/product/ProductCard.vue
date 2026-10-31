@@ -46,7 +46,7 @@
       <div>
         <div class="d-flex align-center justify-space-between mb-1">
           <span class="text-caption text-grey-darken-1 font-weight-bold" style="letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.625rem !important; opacity: 0.65;">
-            AADAB
+            MARKZ
           </span>
           <span class="text-caption text-grey" style="font-size: 0.625rem !important; letter-spacing: 0.05em; text-transform: uppercase;">
             {{ product?.category?.name || "Category" }}

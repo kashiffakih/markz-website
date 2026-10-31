@@ -123,6 +123,8 @@
               </div>
             </div>
 
+            <MarketPolicyBadges />
+
             <!-- Points Display -->
             <div
               v-if="currentPoints > 0"
@@ -322,6 +324,18 @@
                     class="share-btn-round"
                   >
                     <v-icon>mdi-share-variant-outline</v-icon>
+                  </v-btn>
+
+                  <v-btn
+                    v-if="product.company_id"
+                    variant="outlined"
+                    color="secondary"
+                    size="large"
+                    height="54"
+                    prepend-icon="mdi-message-text-outline"
+                    @click="chatWithSeller"
+                  >
+                    Chat with seller
                   </v-btn>
                 </div>
               </div>
@@ -802,10 +816,21 @@ const handleNotifyMe = async () => {
 };
 
 // Social share action
+const chatWithSeller = () => {
+  if (!authStore.isLoggedIn) {
+    navigateToLogin();
+    return;
+  }
+  router.push({
+    path: "/chat",
+    query: { company: String(product.value.company_id), product: String(product.value.id) },
+  });
+};
+
 const shareProduct = async () => {
   const shareData = {
-    title: product.value?.name || "Aadab Product",
-    text: product.value?.description || `Check out ${product.value?.name || 'this product'} on Aadab!`,
+    title: product.value?.name || "Markz Product",
+    text: product.value?.description || `Check out ${product.value?.name || 'this product'} on Markz!`,
     url: window.location.href,
   };
 

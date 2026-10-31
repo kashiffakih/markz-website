@@ -165,6 +165,33 @@
         <v-card class="pa-6" rounded="lg">
           <h3 class="text-h6 font-weight-bold mb-4">Order Summary</h3>
 
+          <!-- free delivery nudge -->
+          <v-alert
+            v-if="policy && awayFromFree(cartStore.selectedTotalAmount) > 0"
+            type="info"
+            variant="tonal"
+            density="compact"
+            icon="mdi-truck-fast-outline"
+            class="mb-4"
+          >
+            ₹{{ awayFromFree(cartStore.selectedTotalAmount).toLocaleString("en-IN") }} aur add karo,
+            <b>delivery free</b> ho jayegi
+            <v-progress-linear
+              :model-value="Math.min(100, (cartStore.selectedTotalAmount / Number(policy.free_delivery_above)) * 100)"
+              color="success" height="6" rounded class="mt-2"
+            />
+          </v-alert>
+          <v-alert
+            v-else-if="policy && cartStore.selectedTotalAmount > 0"
+            type="success"
+            variant="tonal"
+            density="compact"
+            icon="mdi-check-circle-outline"
+            class="mb-4"
+          >
+            Badhai ho! Is order par <b>delivery free</b> hai.
+          </v-alert>
+
           <div class="d-flex justify-space-between mb-2">
             <span class="text-grey"
               >Subtotal ({{ cartStore.selectedItemCount }} items)</span
@@ -522,6 +549,8 @@ import { useAuthStore } from "@stores/auth";
 import { useCartStore } from "@stores/cart";
 
 const authStore = useAuthStore();
+const { policy, load: loadPolicy, deliveryFor, awayFromFree } = usePolicy();
+onMounted(loadPolicy);
 const cartStore = useCartStore();
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -566,7 +595,8 @@ const companyFees = computed(() => {
   const company = authStore.user?.companies?.[0];
   const parseAmount = (val: any) => parseFloat((val || 0).toString());
   return {
-    deliveryCharges: parseAmount(company?.deliveryCharges || 0),
+    // platform-wide rule (free above a cart value, small fee below); old seller value only if policy is not loaded
+    deliveryCharges: deliveryFor(cartStore.selectedTotalAmount, parseAmount(company?.deliveryCharges || 0)),
     packagingCharges: parseAmount(company?.packagingCharges || 0),
     platformFee: parseAmount(company?.platformFee || 0),
   };

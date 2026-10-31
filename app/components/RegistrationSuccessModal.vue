@@ -39,7 +39,7 @@
         </h2>
 
         <p class="text-body-1 text-grey-darken-1 mb-6 font-weight-medium" style="font-family: 'Urbanist', sans-serif;">
-          Welcome to Aadab{{ userName ? ', ' + userName : '' }}! Your account has been created.
+          Welcome to Markz{{ userName ? ', ' + userName : '' }}! Your account has been created.
         </p>
 
         <div class="bonus-container d-flex align-center justify-center pa-4 mb-6 rounded-lg">

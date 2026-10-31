@@ -1,801 +1,163 @@
 <template>
-  <div class="elegance-container">
-    <!-- Loading State -->
-    <div v-if="loading" class="d-flex justify-center align-center py-12" style="min-height: 100vh;">
-      <v-progress-circular indeterminate color="#222222" size="64" width="2"></v-progress-circular>
-    </div>
-
-    <template v-else>
-      <!-- 1. The Floating Hero Slider -->
-      <section class="hero-wrapper pa-4 pa-md-8">
-        <v-carousel
-          cycle
-          height="85vh"
-          hide-delimiter-background
-          show-arrows="hover"
-          class="hero-carousel"
-          :interval="6000"
-        >
-          <!-- Default fallback -->
-          <v-carousel-item
-            v-if="bannerUrls.length === 0"
-            src="https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2071&auto=format&fit=crop"
-            cover
-          >
-            <div class="hero-floating-card">
-              <span class="elegant-eyebrow">THE SIGNATURE COLLECTION</span>
-              <h1 class="elegant-title mb-6">Effortless Grace</h1>
-              <NuxtLink to="/products" class="elegant-btn">DISCOVER THE LOOK</NuxtLink>
-            </div>
-          </v-carousel-item>
-
-          <v-carousel-item
-            v-for="(url, i) in bannerUrls"
-            :key="i"
-            :src="url"
-            cover
-          >
-            <div class="hero-floating-card">
-              <span class="elegant-eyebrow">VOL. 0{{ i + 1 }} EXCLUSIVE</span>
-              <h1 class="elegant-title mb-6">Modern Luxury</h1>
-              <NuxtLink to="/products" class="elegant-btn">SHOP THE EDIT</NuxtLink>
-            </div>
-          </v-carousel-item>
+  <div class="mk-home">
+    <!-- HERO -->
+    <section class="mk-container" style="padding-top:14px">
+      <div v-if="heroBanners.length" class="mk-hero mk-hero--banners">
+        <v-carousel cycle hide-delimiter-background show-arrows="hover" :interval="5500" :height="'100%'" delimiter-icon="mdi-circle-small">
+          <v-carousel-item v-for="b in heroBanners" :key="b.id" :src="b.url" cover @click="openBanner(b)" :style="b.link_type !== 'none' ? 'cursor:pointer' : ''" />
         </v-carousel>
-      </section>
-
-      <!-- 2. Infinite Scrolling Marquee -->
-      <div class="marquee-section">
-        <div class="marquee-content">
-          <span v-for="i in 10" :key="i">
-            ✨ PREMIUM APPAREL ✨ FREE SHIPPING ON ORDERS OVER $150 ✨ MODERN LUXURY
-          </span>
+      </div>
+      <div v-else class="mk-hero">
+        <div class="mk-hero__fallback">
+          <span class="mk-pill" style="align-self:flex-start; background:rgba(255,255,255,.15); color:#fff">Markz Marketplace</span>
+          <h1>Trusted sellers. Best prices. Ek hi jagah.</h1>
+          <p>Fashion aur lifestyle ke products direct sellers se - cash on delivery aur easy returns ke saath.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <NuxtLink to="/shop" class="mk-btn mk-btn--gold">Shop Now</NuxtLink>
+            <NuxtLink to="/sell" class="mk-btn mk-btn--white">Sell on Markz</NuxtLink>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- 3. "Our Collections" Hover Gallery -->
-      <section class="category-hover-gallery" v-if="productStore.categories.length > 0">
-        <div class="hover-gallery-bg">
-          <transition name="fade-bg" mode="out-in">
-             <v-img 
-               :key="activeCategoryIndex" 
-               :src="getImageUrl(productStore.categories[activeCategoryIndex]?.imagepath)" 
-               cover 
-               class="h-100 w-100"
-             ></v-img>
-          </transition>
-          <div class="gallery-overlay"></div>
-        </div>
+    <!-- TRUST STRIP -->
+    <section class="mk-container" style="padding-top:14px">
+      <div class="mk-trust">
+        <div class="mk-trust__item"><span class="mk-trust__icon"><v-icon>mdi-truck-fast-outline</v-icon></span><div><div class="mk-trust__t">Fast Delivery</div><div class="mk-trust__s">Pure India shipping</div></div></div>
+        <div class="mk-trust__item"><span class="mk-trust__icon"><v-icon>mdi-cash-multiple</v-icon></span><div><div class="mk-trust__t">Cash on Delivery</div><div class="mk-trust__s">Ghar par payment</div></div></div>
+        <div class="mk-trust__item"><span class="mk-trust__icon"><v-icon>mdi-backup-restore</v-icon></span><div><div class="mk-trust__t">Easy Returns</div><div class="mk-trust__s">7 din return window</div></div></div>
+        <div class="mk-trust__item"><span class="mk-trust__icon"><v-icon>mdi-shield-check-outline</v-icon></span><div><div class="mk-trust__t">Verified Sellers</div><div class="mk-trust__s">Har seller approved</div></div></div>
+      </div>
+    </section>
 
-        <div class="hover-gallery-content px-4 px-md-12">
-           <div class="d-flex flex-column justify-center h-100" style="max-width: 1400px; margin: 0 auto;">
-              <span class="elegant-eyebrow text-white mb-8" style="opacity: 0.8;">CURATED SELECTIONS</span>
-              
-              <div class="gallery-nav-list">
-                 <NuxtLink 
-                   v-for="(category, index) in productStore.categories.slice(0, 5)" 
-                   :key="category.id"
-                   :to="`/products?category=${category.id}`"
-                   class="gallery-nav-item d-flex align-start text-decoration-none"
-                   @mouseenter="activeCategoryIndex = index"
-                 >
-                   <span class="nav-number" :class="{ 'text-white': activeCategoryIndex === index }">0{{ index + 1 }}</span>
-                   <h2 class="nav-title" :class="{ 'is-active': activeCategoryIndex === index }">{{ category.name }}</h2>
-                 </NuxtLink>
-              </div>
-           </div>
-        </div>
-      </section>
-
-      <!-- 4. Overlapping Editorial Promotional Section -->
-      <section class="editorial-promo py-16">
-        <div class="container mx-auto px-4 px-md-8" style="max-width: 1400px;">
-          <div class="v-row align-center">
-            <div class="v-col-12 v-col-md-7 position-relative z-1">
-              <div class="editorial-img-wrap">
-                <v-img 
-                  src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2070&auto=format&fit=crop" 
-                  cover 
-                  class="h-100 w-100"
-                  aspect-ratio="4/5"
-                ></v-img>
-              </div>
-            </div>
-            <div class="v-col-12 v-col-md-5 position-relative z-2">
-              <div class="editorial-text-box bg-white pa-8 pa-md-16">
-                <span class="elegant-eyebrow mb-4">PARTNER WITH US</span>
-                <h2 class="section-heading mb-6">Elevate Your Retail Experience</h2>
-                <p class="elegant-body mb-8 text-grey-darken-2">
-                  Join our elite network of wholesale distributors and gain access to our premium catalog with exclusive pricing. Experience the standard of modern luxury.
-                </p>
-                <NuxtLink v-if="!authStore.isLoggedIn || !authStore.isDistributor" to="/distributor/register" class="elegant-btn-outline">
-                  BECOME A PARTNER
-                </NuxtLink>
-                <div v-else class="text-subtitle-1 font-italic text-success">
-                  Your Distributor Account is Active.
-                </div>
-              </div>
-            </div>
+    <!-- CATEGORIES -->
+    <section v-if="categories.length" class="mk-container mk-section">
+      <div class="mk-section-head">
+        <div><h2 class="mk-section-title">Shop by Category</h2></div>
+        <NuxtLink to="/categories" class="mk-link">See all</NuxtLink>
+      </div>
+      <div class="mk-scroller">
+        <NuxtLink v-for="c in categories" :key="c.id" :to="`/shop?category=${c.id}`" class="mk-cat">
+          <div class="mk-cat__img">
+            <img v-if="c.imagepath" :src="img(c.imagepath)" :alt="c.name" loading="lazy" />
+            <v-icon v-else>mdi-tag-outline</v-icon>
           </div>
+          <div class="mk-cat__name">{{ c.name }}</div>
+        </NuxtLink>
+      </div>
+    </section>
+
+    <!-- DEALS -->
+    <section v-if="deals.length" class="mk-container mk-section" style="padding-top:4px">
+      <div class="mk-section-head">
+        <div><h2 class="mk-section-title">🔥 Hot Deals</h2><div class="mk-section-sub">Sabse zyada discount wale products</div></div>
+        <NuxtLink to="/shop?sort=latest" class="mk-link">View all</NuxtLink>
+      </div>
+      <div class="mk-grid mk-grid--5">
+        <MarketProductCard v-for="p in deals.slice(0, 5)" :key="'d' + p.id" :product="p" />
+      </div>
+    </section>
+
+    <!-- NEW ARRIVALS -->
+    <section class="mk-container mk-section">
+      <div class="mk-section-head">
+        <div><h2 class="mk-section-title">New Arrivals</h2><div class="mk-section-sub">Sellers ne abhi jode hain</div></div>
+        <NuxtLink to="/shop" class="mk-link">View all</NuxtLink>
+      </div>
+      <MarketProductSkeleton v-if="loading" :count="8" />
+      <div v-else-if="newArrivals.length" class="mk-grid mk-grid--5">
+        <MarketProductCard v-for="p in newArrivals.slice(0, 10)" :key="p.id" :product="p" />
+      </div>
+      <div v-else class="mk-empty"><v-icon>mdi-package-variant-closed</v-icon><p>Abhi koi product available nahi hai.</p></div>
+    </section>
+
+    <!-- BECOME A SELLER / RESELLER -->
+    <section class="mk-container mk-section">
+      <div class="mk-split">
+        <div class="mk-tile">
+          <span class="mk-pill">For businesses</span>
+          <h3>Apna business Markz par becho</h3>
+          <p>Free registration, seller dashboard, direct payouts aur poore India ke customers tak pahunch.</p>
+          <NuxtLink to="/sell" class="mk-btn mk-btn--sm">Start Selling</NuxtLink>
         </div>
-      </section>
-
-      <!-- 5. Seamless Product Carousel (New Arrivals) -->
-      <section class="products-section py-16 bg-white" v-if="productStore.products.length > 0">
-        <div class="d-flex justify-space-between align-end mb-12 px-4 px-md-12" style="max-width: 1600px; margin: 0 auto;">
-          <div>
-            <span class="elegant-eyebrow mb-2">JUST LANDED</span>
-            <h2 class="section-heading mb-0">New Arrivals</h2>
-          </div>
-          <NuxtLink to="/products?newArrivals=true" class="elegant-link">VIEW ALL</NuxtLink>
+        <div class="mk-tile mk-tile--gold">
+          <span class="mk-pill" style="background:#fff">Zero investment</span>
+          <h3>Reseller bano, margin kamao</h3>
+          <p>Products apne customers ko apne margin par becho. Stock aur delivery hum sambhalte hain.</p>
+          <NuxtLink to="/reseller" class="mk-btn mk-btn--gold mk-btn--sm">Join as Reseller</NuxtLink>
         </div>
-        
-        <v-slide-group
-          class="px-4 px-md-12"
-          show-arrows
-        >
-          <v-slide-group-item
-            v-for="product in productStore.products"
-            :key="product.id"
-          >
-            <div class="product-carousel-card mx-2 mx-md-4">
-              <product-card :product="product" class="h-100 elegant-product-card" />
-            </div>
-          </v-slide-group-item>
-        </v-slide-group>
-      </section>
+      </div>
+    </section>
 
-      <!-- Tag-wise Products Sections -->
-      <section v-if="productStore.tags && productStore.tags.length > 0" class="tags-master-wrapper py-16">
-        <div class="px-4 px-md-12 mb-12" style="max-width: 1600px; margin: 0 auto;">
-          <!-- Master Header -->
-          <div class="d-flex flex-column align-center text-center mb-10">
-            <div class="tag-master-badge mb-3 px-4 py-1 rounded-pill d-inline-flex align-center ga-2">
-              <v-icon size="14" color="#C5A850">mdi-rhombus-split-outline</v-icon>
-              <span class="text-caption font-weight-bold tracking-widest" style="color: #C5A850;">CURATED EDITIONS</span>
-            </div>
-            <h2 class="section-heading text-h3 font-weight-light mb-3" style="font-family: 'Cormorant Garamond', serif !important;">
-              Shop By Signature Tag
-            </h2>
-            <p class="text-grey-darken-1 text-subtitle-1 mb-8" style="max-width: 540px; font-weight: 300;">
-              Hand-selected curations categorised by style, occasion, and seasonal trends.
-            </p>
+    <!-- TOP SELLERS -->
+    <section v-if="sellers.length" class="mk-container mk-section">
+      <div class="mk-section-head">
+        <div><h2 class="mk-section-title">Top Sellers</h2><div class="mk-section-sub">Verified aur trusted stores</div></div>
+        <NuxtLink to="/sellers" class="mk-link">All sellers</NuxtLink>
+      </div>
+      <div class="mk-sgrid">
+        <MarketSellerCard v-for="s in sellers.slice(0, 8)" :key="s.id" :seller="s" />
+      </div>
+    </section>
 
-            <!-- Quick Tag Navigation Bar -->
-            <div class="d-flex ga-2 overflow-x-auto py-2 px-3 bg-white rounded-pill border shadow-sm ga-2" style="max-width: 100%; scrollbar-width: none;">
-              <v-btn
-                variant="text"
-                rounded="pill"
-                size="small"
-                :class="['tag-nav-btn', activeTagId === null ? 'is-active-tag-btn' : '']"
-                @click="activeTagId = null"
-              >
-                All Collections
-              </v-btn>
-              <v-btn
-                v-for="tag in availableTags"
-                :key="tag.id"
-                variant="text"
-                rounded="pill"
-                size="small"
-                :class="['tag-nav-btn', activeTagId === tag.id ? 'is-active-tag-btn' : '']"
-                @click="activeTagId = tag.id"
-              >
-                {{ tag.name }}
-              </v-btn>
-            </div>
-          </div>
-
-          <!-- Tag Sections List -->
-          <div class="tag-sections-container d-flex flex-column ga-12">
-            <div
-              v-for="(tag, index) in filteredTags"
-              :key="tag.id"
-              class="tag-luxury-card pa-6 pa-md-10 rounded-32 position-relative"
-            >
-              <!-- Card Top Bar -->
-              <div class="d-flex justify-space-between align-center flex-wrap ga-4 mb-8">
-                <div class="d-flex align-center ga-3">
-                  <div class="tag-number-emblem">
-                    0{{ index + 1 }}
-                  </div>
-                  <div>
-                    <div class="d-flex align-center ga-2 mb-1">
-                      <span class="text-caption font-weight-bold tracking-widest text-uppercase text-grey-darken-1">TAGGED EDITION</span>
-                      <span class="tag-dot-sep">•</span>
-                      <span class="text-caption font-weight-bold text-primary">{{ tag.products?.length || 0 }} PIECES</span>
-                    </div>
-                    <h3 class="tag-title text-h4 font-weight-bold mb-0">
-                      {{ tag.name }}
-                    </h3>
-                  </div>
-                </div>
-
-                <NuxtLink :to="`/products?tag=${tag.id}`" class="tag-explore-btn d-inline-flex align-center ga-2">
-                  <span>EXPLORE {{ tag.name.toUpperCase() }}</span>
-                  <v-icon size="16">mdi-arrow-right</v-icon>
-                </NuxtLink>
-              </div>
-
-              <!-- Product Carousel -->
-              <v-slide-group
-                class="px-0"
-                show-arrows
-              >
-                <v-slide-group-item
-                  v-for="product in tag.products"
-                  :key="product.id"
-                >
-                  <div class="product-carousel-card mx-2 mx-md-3">
-                    <product-card :product="product" class="h-100 elegant-product-card" />
-                  </div>
-                </v-slide-group-item>
-              </v-slide-group>
-            </div>
-          </div>
+    <!-- REFER BAND -->
+    <section class="mk-container mk-section">
+      <div class="mk-band">
+        <div>
+          <h2>Register karo, rewards pao</h2>
+          <p>Naya account banao, doston ko refer karo aur har successful referral par reward kamao.</p>
         </div>
-      </section>
-
-      <!-- Discover More Section -->
-      <section class="discover-more-section py-20 position-relative" v-if="productStore.randomProducts.length > 0">
-        <div class="container mx-auto px-4 px-md-8" style="max-width: 1400px;">
-          <!-- Discover Header -->
-          <div class="d-flex flex-column align-center text-center mb-12">
-            <div class="discover-badge mb-3 px-4 py-1 rounded-pill d-inline-flex align-center ga-2">
-              <v-icon size="16" color="#C5A850">mdi-sparkles</v-icon>
-              <span class="text-caption font-weight-bold tracking-wider" style="color: #C5A850;">HANDPICKED FOR YOU</span>
-            </div>
-            <h2 class="section-heading text-h3 font-weight-light mb-3">Discover More Exquisite Pieces</h2>
-            <p class="text-grey-darken-1 text-subtitle-1" style="max-width: 540px; font-weight: 300;">
-              Curated additions to match your personal aesthetic and elevate your wardrobe.
-            </p>
-
-            <!-- Quick Filter Tabs -->
-            <div class="d-flex ga-2 mt-6 p-1 bg-white rounded-pill border elevation-1">
-              <v-btn
-                v-for="tab in discoverTabs"
-                :key="tab.value"
-                variant="text"
-                rounded="pill"
-                size="small"
-                :class="['discover-tab-btn', activeDiscoverTab === tab.value ? 'is-active-tab' : '']"
-                @click="activeDiscoverTab = tab.value"
-              >
-                {{ tab.label }}
-              </v-btn>
-            </div>
-          </div>
-          
-          <!-- Discover Product Grid -->
-          <v-row class="ga-y-6">
-            <v-col
-              v-for="product in displayDiscoverProducts"
-              :key="product.id"
-              cols="12"
-              sm="6"
-              md="3"
-            >
-              <div class="discover-card-wrapper h-100">
-                <product-card :product="product" class="h-100 elegant-product-card" />
-              </div>
-            </v-col>
-          </v-row>
-
-          <!-- Call to Action Banner Card -->
-          <div class="discover-cta-banner mt-16 mb-12 mb-md-16 pa-8 pa-md-12 rounded-32 text-center position-relative overflow-hidden">
-            <div class="cta-gradient-overlay"></div>
-            <div class="position-relative z-1">
-              <span class="text-caption text-uppercase font-weight-bold tracking-widest text-gold-light mb-2 d-block">EXPLORE THE FULL CATALOG</span>
-              <h3 class="text-h4 text-white font-weight-light mb-4">Looking for something specific?</h3>
-              <p class="text-grey-lighten-2 mb-8 mx-auto" style="max-width: 600px; font-size: 1.05rem;">
-                Explore our full collection with filtering by size, color, category, and price range.
-              </p>
-              <NuxtLink to="/products" class="gold-cta-btn">
-                EXPLORE ALL PRODUCTS <v-icon size="18" class="ms-2">mdi-arrow-right</v-icon>
-              </NuxtLink>
-            </div>
-          </div>
+        <div class="mk-band__row">
+          <NuxtLink to="/register" class="mk-btn mk-btn--gold">Create Account</NuxtLink>
+          <NuxtLink to="/shop" class="mk-btn mk-btn--white">Start Shopping</NuxtLink>
         </div>
-      </section>
-
-    </template>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useProductStore } from "@stores/product";
-import { useAuthStore } from "@stores/auth";
-import ProductCard from "~/components/product/ProductCard.vue";
+import { useProductStore } from '@stores/product'
 
-const productStore = useProductStore();
-const authStore = useAuthStore();
-const config = useRuntimeConfig();
+useHead({ title: 'Markz - Online Marketplace for Fashion & Lifestyle' })
 
-const loading = ref(true);
-const activeCategoryIndex = ref(0);
+const router = useRouter()
+const config = useRuntimeConfig()
+const productStore = useProductStore()
+const { img, home } = useMarket()
 
-const activeTagId = ref<number | null>(null);
+const loading = ref(true)
+const newArrivals = ref<any[]>([])
+const deals = ref<any[]>([])
+const sellers = ref<any[]>([])
 
-const availableTags = computed(() => {
-  if (!productStore.tags) return [];
-  return productStore.tags.filter(t => t.products && t.products.length > 0);
-});
+const categories = computed(() => productStore.categories || [])
 
-const filteredTags = computed(() => {
-  if (!productStore.tags) return [];
-  const withProducts = productStore.tags.filter(t => t.products && t.products.length > 0);
-  if (activeTagId.value !== null) {
-    return withProducts.filter(t => t.id === activeTagId.value);
+// Hero banners are managed by Super Admin (admin panel -> Home Banners) and arrive inside /marketplace/home.
+// With no active banner the branded Markz hero in the template is shown.
+const heroBanners = ref<any[]>([])
+const openBanner = (b: any) => {
+  const v = b.link_value
+  if (b.link_type === 'category') router.push(`/shop?category=${v}`)
+  else if (b.link_type === 'seller') router.push(`/sellers/${v}`)
+  else if (b.link_type === 'product') router.push(`/products/${v}`)
+  else if (b.link_type === 'url') {
+    if (/^https?:/i.test(v)) window.open(v, '_blank', 'noopener')
+    else router.push(v)
   }
-  return withProducts;
-});
-
-const activeDiscoverTab = ref("all");
-
-const discoverTabs = [
-  { label: "All Picks", value: "all" },
-  { label: "Top Rated", value: "top_rated" },
-  { label: "Best Value", value: "best_value" },
-];
-
-const displayDiscoverProducts = computed(() => {
-  let list = [...(productStore.randomProducts || [])];
-  if (activeDiscoverTab.value === "top_rated") {
-    list.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
-  } else if (activeDiscoverTab.value === "best_value") {
-    list.sort((a, b) => {
-      const priceA = a.product_prices?.[0]?.offer_price || a.product_prices?.[0]?.price || 0;
-      const priceB = b.product_prices?.[0]?.offer_price || b.product_prices?.[0]?.price || 0;
-      return priceA - priceB;
-    });
-  }
-  return list.slice(0, 8);
-});
-
-const bannerPaths = [
-  "banner_path_1",
-  "banner_path_2",
-  "banner_path_3",
-  "banner_path_11",
-  "banner_path_12",
-  "banner_path_13",
-];
-
-const bannerUrls = computed(() => {
-  const mediaBase = config.public.mediaBase as string;
-  return bannerPaths
-    .filter((path) => productStore.banners[path])
-    .map((path) => `${mediaBase}${productStore.banners[path]}`);
-});
-
-const getImageUrl = (path: string) => {
-  if (!path) return "";
-  if (path.startsWith("http")) return path;
-  const mediaBase = config.public.mediaBase as string;
-  return `${mediaBase}${path}`;
-};
+}
 
 onMounted(async () => {
-  loading.value = true;
-  await Promise.all([
+  const [, res] = await Promise.all([
     productStore.fetchCategories(),
-    productStore.fetchBanners(),
-    productStore.fetchNewArrivals(),
-    productStore.fetchRandomProducts(),
-    productStore.fetchTags(),
-  ]);
-  loading.value = false;
-});
-</script>
-
-<style scoped>
-/* Base Constraints */
-.elegance-container {
-  background-color: #FDFBF7; /* Soft warm beige */
-  color: #222222;
-  font-family: 'Urbanist', sans-serif;
-  overflow-x: hidden;
-}
-
-/* Typography */
-.elegant-eyebrow {
-  font-size: 0.85rem;
-  letter-spacing: 0.2em;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #888888;
-  display: block;
-}
-.elegant-title {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: #222222;
-}
-.section-heading {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  color: #222222;
-}
-.elegant-body {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  font-weight: 300;
-}
-
-/* Buttons & Links */
-.elegant-btn {
-  display: inline-block;
-  background-color: #222222;
-  color: #FFFFFF !important;
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  padding: 16px 40px;
-  border-radius: 999px; /* Pill shape */
-  text-decoration: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.elegant-btn:hover {
-  background-color: #444444;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.elegant-btn-outline {
-  display: inline-block;
-  background-color: transparent;
-  color: #222222 !important;
-  border: 1px solid #222222;
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  padding: 16px 40px;
-  border-radius: 999px; /* Pill shape */
-  text-decoration: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.elegant-btn-outline:hover {
-  background-color: #222222;
-  color: #FFFFFF !important;
-}
-
-.elegant-link {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: #222222;
-  text-decoration: none;
-  border-bottom: 1px solid #222222;
-  padding-bottom: 2px;
-  transition: opacity 0.3s ease;
-}
-.elegant-link:hover {
-  opacity: 0.6;
-}
-
-/* 1. Hero Section */
-.hero-carousel {
-  border-radius: 32px;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.05);
-}
-.hero-floating-card {
-  position: absolute;
-  bottom: 8%;
-  left: 8%;
-  background: rgba(253, 251, 247, 0.9);
-  backdrop-filter: blur(20px);
-  padding: 3rem;
-  border-radius: 24px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
-
-/* 2. Marquee */
-.marquee-section {
-  width: 100vw;
-  overflow: hidden;
-  background-color: #222222;
-  color: #FDFBF7;
-  padding: 1rem 0;
-  position: relative;
-}
-.marquee-content {
-  display: flex;
-  white-space: nowrap;
-  animation: marquee 30s linear infinite;
-}
-.marquee-content span {
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  padding: 0 2rem;
-}
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* 3. Interactive Hover Gallery */
-.category-hover-gallery {
-  position: relative;
-  height: 85vh;
-  min-height: 600px;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%); /* Full bleed */
-  margin-top: 64px;
-  margin-bottom: 64px;
-  overflow: hidden;
-  background-color: #111111;
-}
-
-.hover-gallery-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-.gallery-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.1) 100%);
-  z-index: 2;
-  pointer-events: none;
-}
-
-.hover-gallery-content {
-  position: relative;
-  z-index: 3;
-  height: 100%;
-}
-
-.gallery-nav-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.gallery-nav-item {
-  color: rgba(255, 255, 255, 0.4);
-  transition: color 0.5s ease;
-  padding: 8px 0;
-}
-
-.nav-number {
-  font-family: "Urbanist", sans-serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  margin-right: 32px;
-  margin-top: 16px;
-  transition: color 0.5s ease;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.nav-title {
-  font-size: clamp(3rem, 6vw, 5.5rem);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  line-height: 1.1;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.gallery-nav-item:hover .nav-title, .nav-title.is-active {
-  color: #ffffff;
-  transform: translateX(40px);
-}
-
-.nav-title.is-active {
-  font-style: italic;
-  font-weight: 400;
-}
-
-.fade-bg-enter-active,
-.fade-bg-leave-active {
-  transition: opacity 1s ease, transform 2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.fade-bg-enter-from {
-  opacity: 0;
-  transform: scale(1.05);
-}
-.fade-bg-leave-to {
-  opacity: 0;
-  transform: scale(1);
-}
-
-/* Customizing Slide Group Arrows */
-:deep(.v-slide-group__prev), :deep(.v-slide-group__next) {
-  background: #FDFBF7;
-  border: 1px solid #E5E5E5;
-  border-radius: 50%;
-  margin: 0 10px;
-  transition: all 0.3s ease;
-}
-:deep(.v-slide-group__prev:hover), :deep(.v-slide-group__next:hover) {
-  background: #222222;
-  color: #FFFFFF;
-}
-
-/* 4. Editorial Promo (Overlapping) */
-.editorial-img-wrap {
-  border-radius: 32px;
-  overflow: hidden;
-}
-.editorial-text-box {
-  border-radius: 32px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-}
-@media (min-width: 960px) {
-  .editorial-text-box {
-    margin-left: -100px; /* Overlap effect */
+    home().catch(() => null),
+  ])
+  if (res) {
+    heroBanners.value = (res.banners || []).map((b: any) => ({ ...b, url: img(b.image_path) }))
+    newArrivals.value = res.new_arrivals || []
+    deals.value = res.deals || []
+    sellers.value = res.top_sellers || []
   }
-}
-
-/* 5. Product Carousels */
-.product-carousel-card {
-  width: 300px;
-}
-
-/* Refined Tag-Wise Products Styling */
-.tags-master-wrapper {
-  background-color: #FDFBF7;
-}
-
-.tag-master-badge {
-  background: rgba(197, 168, 80, 0.08);
-  border: 1px solid rgba(197, 168, 80, 0.2);
-}
-
-.tag-nav-btn {
-  font-weight: 600 !important;
-  color: #666666 !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase !important;
-  font-size: 0.75rem !important;
-  padding: 0 18px !important;
-  height: 36px !important;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.tag-nav-btn.is-active-tag-btn, .tag-nav-btn:hover {
-  background: #1A1A1A !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-}
-
-.tag-luxury-card {
-  background: linear-gradient(145deg, #FFFFFF 0%, #FAF6EF 100%);
-  border: 1px solid rgba(197, 168, 80, 0.2);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.03);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-
-.tag-luxury-card:hover {
-  border-color: rgba(197, 168, 80, 0.4);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
-}
-
-.tag-number-emblem {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: rgba(197, 168, 80, 0.1);
-  border: 1px solid rgba(197, 168, 80, 0.25);
-  color: #C5A850;
-  font-weight: 700;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Urbanist', sans-serif;
-}
-
-.tag-dot-sep {
-  color: #C5A850;
-  font-size: 0.8rem;
-}
-
-.tag-title {
-  color: #1A1A1A;
-  font-family: 'Urbanist', sans-serif;
-  letter-spacing: -0.01em;
-}
-
-.tag-explore-btn {
-  background: #1A1A1A;
-  color: #FFFFFF !important;
-  font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  padding: 12px 24px;
-  border-radius: 999px;
-  text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.tag-explore-btn:hover {
-  background: #C5A850;
-  color: #1A1A1A !important;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(197, 168, 80, 0.3);
-}
-
-/* Discover More Styling */
-.discover-more-section {
-  background-color: #FDFBF7;
-  padding-bottom: 6rem;
-}
-
-.discover-badge {
-  background: rgba(197, 168, 80, 0.1);
-  border: 1px solid rgba(197, 168, 80, 0.25);
-}
-
-.discover-tab-btn {
-  font-weight: 600 !important;
-  color: #666666 !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
-  font-size: 0.75rem !important;
-  transition: all 0.3s ease !important;
-}
-
-.discover-tab-btn.is-active-tab {
-  background-color: #222222 !important;
-  color: #FFFFFF !important;
-}
-
-.discover-card-wrapper {
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.discover-card-wrapper:hover {
-  transform: translateY(-8px);
-}
-
-.discover-cta-banner {
-  background-color: #161616;
-  border-radius: 32px;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.15);
-  margin-bottom: 3rem;
-}
-
-.cta-gradient-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(197, 168, 80, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
-  pointer-events: none;
-}
-
-.text-gold-light {
-  color: #EED056;
-}
-
-.gold-cta-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #C5A850 0%, #EED056 100%);
-  color: #111111 !important;
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 0.15em;
-  padding: 16px 36px;
-  border-radius: 999px;
-  text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 25px rgba(197, 168, 80, 0.3);
-}
-
-.gold-cta-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(197, 168, 80, 0.45);
-}
-</style>
+  loading.value = false
+})
+</script>

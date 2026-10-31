@@ -9,7 +9,7 @@
             >
             <h2 class="text-h4 font-weight-bold">Become a Distributor</h2>
             <p class="text-subtitle-1 text-medium-emphasis mt-2">
-              Expand your business with Aadab
+              Expand your business with Markz
             </p>
           </div>
 

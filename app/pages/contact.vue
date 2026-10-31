@@ -14,7 +14,7 @@
 
       <div v-else class="contact-items d-flex flex-column gap-4">
         <!-- Email -->
-        <a :href="`mailto:${email}?subject=Hello Aadab`" class="contact-item text-decoration-none">
+        <a :href="`mailto:${email}?subject=Hello Markz`" class="contact-item text-decoration-none">
           <div class="d-flex align-center w-100">
             <div class="icon-wrapper mr-4">
               <v-icon icon="mdi-email" color="accent" size="24"></v-icon>
@@ -108,7 +108,7 @@ const address = computed(() => {
 });
 
 useHead({
-  title: 'Contact Us - Aadab',
+  title: 'Contact Us - Markz',
 });
 </script>
 
